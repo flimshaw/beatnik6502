@@ -39,11 +39,14 @@ function processDict(d) {
       i += w.length
       return j
     })
+    let lengths = dict[k].map(w => w.length)
     // each dict should be an array of indices
     // and a huge datablock
     return {
+      name: k,
       data: dict[k].join(''),
       indices: indices,
+      lengths: lengths,
     }
   })
 
@@ -54,8 +57,24 @@ function formatDatablock(datablocks) {
   let k = datablocks.map(d => {
     return d.indices;
   })
-  let g = k.map(d => `.word ${d.map(v => `\$${v.toString(16)}`).join(',')}`)
-  return g
+  let g = k.map((d,i) => `
+
+    ///////////////////////////
+    // ${datablocks[i].name}
+    ///////////////////////////
+
+    data_${datablocks[i].name}_lengths:
+      // word lengths
+      .byte ${datablocks[i].lengths.map(v => `\$${v.toString(16)}`).join(',')}
+    data_${datablocks[i].name}_indices:
+      // indices
+      .word ${d.map(v => `\$${v.toString(16)}`).join(',')}
+    data_${datablocks[i].name}_data:
+      // raw datablock
+      .text "${datablocks[i].data}"
+
+  `)
+  return g.join('')
 }
 
 setTimeout(() => console.log(formatDatablock(processDict(dict))), 500)
