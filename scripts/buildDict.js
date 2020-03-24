@@ -1,7 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const readline = require('readline')
-const folderPath = '../dict'
+const folderPath = path.resolve(`${__dirname}`,'../dict')
 
 const dict = {}
 
@@ -16,10 +16,46 @@ fs.readdirSync(folderPath).map(fileName => {
   readInterface.on('line', function(line) {
     const type = fileName.split('.src')[0]
     if(dict[type] === undefined) dict[type] = []
-    // console.log(, line);
     dict[type].push(line)
   });
-  // console.log(fs.readFileSync())
 })
 
-setTimeout(() => console.log(dict), 1000)
+// datablock = "jkldjfaskljfaklsjdfa"
+//indexes = [16 bit indexes]
+
+
+
+// dump a data block to represent the
+// dictionary, with an index
+function processDict(d) {
+  const dictKeys = Object.keys(d)
+  let i = 0;
+
+  const datablocks = dictKeys.map(k => {
+    let i = 0;
+    let j = 0;
+    let indices = dict[k].map(w => {
+      j = i
+      i += w.length
+      return j
+    })
+    // each dict should be an array of indices
+    // and a huge datablock
+    return {
+      data: dict[k].join(''),
+      indices: indices,
+    }
+  })
+
+  return datablocks
+}
+
+function formatDatablock(datablocks) {
+  let k = datablocks.map(d => {
+    return d.indices;
+  })
+  let g = k.map(d => `.word ${d.map(v => `\$${v.toString(16)}`).join(',')}`)
+  return g
+}
+
+setTimeout(() => console.log(formatDatablock(processDict(dict))), 500)
