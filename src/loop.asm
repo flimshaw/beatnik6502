@@ -1,4 +1,6 @@
 GameLoop
+
+gameIntro
 	txa
 	and #$f
 	sta $0400,x
