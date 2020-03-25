@@ -1,1 +1,5 @@
 node-modules
+node_modules/
+beatnik.tmp
+src/dict.asm
+*.prg

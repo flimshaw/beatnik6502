@@ -59,18 +59,18 @@ function formatDatablock(datablocks) {
   })
   let g = k.map((d,i) => `
 
-    ///////////////////////////
-    // ${datablocks[i].name}
-    ///////////////////////////
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;; ${datablocks[i].name}
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     data_${datablocks[i].name}_lengths:
-      // word lengths
+      ;; word lengths
       .byte ${datablocks[i].lengths.map(v => `\$${v.toString(16)}`).join(',')}
     data_${datablocks[i].name}_indices:
-      // indices
+      ;; indices
       .word ${d.map(v => `\$${v.toString(16)}`).join(',')}
     data_${datablocks[i].name}_data:
-      // raw datablock
+      ;; raw datablock
       .text "${datablocks[i].data}"
 
   `)
