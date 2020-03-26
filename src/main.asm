@@ -11,10 +11,13 @@ VBLANK_FLAG = $01			; time to trigger a vblank
 NEWMODE_FLAG = $02		; mode has changed
 MODEREADY_FLAG = $04	; mode setup complete
 
+INTRO_DELAY = 3
+
 ; maybe some ram? no idea if this is
 ; a good spot
 *=$0901
 secs 	.byte 0
+time 	.byte 0
 ; some constants
 green 	.byte 5
 stat	 	.byte (NEWMODE_FLAG) ; main state variable
@@ -24,14 +27,10 @@ t2		.byte 0
 t3		.byte 0
 t4		.byte 0
 t5		.byte 0
-counter 	.byte 0
-tick 	.byte 0
-time 	.byte 0
-introFlag	.byte 0
+counter .byte 0
+modeTarget .word intro_mode
 RAND .word $D41B	; address of the random number
 									; generator on the SID
-ZERO .byte 0 			; this is probably very dumb
-ONE  .byte 1
 
 ; start this code at $1000
 *=$1000
@@ -115,12 +114,13 @@ randseed	; use SID for randomness
 		sta $D412 ; voice 3 control register
 		jsr setup_vblank
 
+; the outermost loop, also controls frame events
 megaloop
 		lda stat
-		and VBLANK_FLAG
+		and #VBLANK_FLAG
 		beq megaloop	; just loop if there's no flag set
 		lda stat		; otherwise, flip flag on stat
-		and #$fe
+		and #~VBLANK_FLAG
 		sta stat
 		jsr gameLoop	; and run a game loop
 		jmp megaloop
@@ -166,6 +166,6 @@ setup_vblank
 message
 .text "BeAtNik v 1.0 * "
 
-.include "loop.asm"
 .include "helpers.asm"
+.include "loop.asm"
 ;.include "dict.asm"

@@ -5,13 +5,19 @@ gameLoop
 	tya
 	pha
 
-	jsr tick_time	; tick the timer
+	jsr tick_time	; tick the timer 1 frame
 
-	lda time
-	cmp #4
-	bne +
-	jmp blank_mode
-+	jmp intro_mode	; run the intro mode
++	jmp (modeTarget)	; run the intro mode
+
+setMode
+	lda #<blank_mode
+	sta modeTarget
+	lda #>blank_mode
+	sta modeTarget+1
+	lda stat
+	ora #NEWMODE_FLAG
+	sta stat
+	rts
 
 colorCycling
 
@@ -33,9 +39,6 @@ colorCycling
 	sta $da00,x
 	sta $dae8,x
 +	rts
-	; lda $d41b
-	; bne loopEnd
-	; jmp loopEnd
 
 dissolveText
 	lda $d41b
@@ -64,16 +67,24 @@ intro_mode
 	and #NEWMODE_FLAG
 	cmp #0
 	beq +
+
 	; here's the init code
 	lda stat ; kill newmode
-	and ~#NEWMODE_FLAG
+	and #~NEWMODE_FLAG
 	sta stat
 
 	; draw the intro text
 	; to the screen
 	jsr drawIntro
+
 +	jsr colorCycling
-	jmp loopEnd
+
+	; timeout and inc mode
+	lda secs
+	cmp #INTRO_DELAY
+	bne +
+	jsr setMode
++	jmp loopEnd
 
 blank_mode
 	; skip first run stuff if not new
@@ -83,7 +94,7 @@ blank_mode
 	beq +
 	; here's the init code
 	lda stat ; kill newmode
-	and ~#NEWMODE_FLAG
+	and #~NEWMODE_FLAG
 	sta stat
 
 	; draw the intro text
@@ -96,8 +107,7 @@ drawIntro
     ldx #$0
     ldy #$0
 introLoop  lda message,y    ; put the msg + x offset in accumulator
-    ;and #$3f                ; strip the top two bytes away
-    and #$3f
+    and #$3f                ; strip the top two bytes away
     clc
     sta $0400,x             ; put the string byte into the screen + offset
     sta $0500,x
@@ -108,6 +118,6 @@ introLoop  lda message,y    ; put the msg + x offset in accumulator
     tya
     and #$0f
     tay
-    cpx #255                ; see if x != the length of the string
+    cpx #0                ; see if x != the length of the string
     bne introLoop
     rts

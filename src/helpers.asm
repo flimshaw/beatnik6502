@@ -1,12 +1,15 @@
 tick_time
+    ; frame step
     inc time
-    lda #$3c
-    cmp time
+    lda time
+    cmp #$3c
     bne +
     lda #0
     sta time
+    ; secs step
     inc secs
-    lda #$3c
+    lda secs
+    cmp #$3c
     bne +
     lda #0
     sta secs
