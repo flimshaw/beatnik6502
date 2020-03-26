@@ -126,7 +126,7 @@ blank_mode
 +	lda secs
 	cmp #INTRO_DELAY
 	bne +
-	ldx #INTRO_MODE
+	ldx #POEM_MODE
 	jsr setMode
 
 	jmp loopEnd
@@ -142,9 +142,63 @@ poem_mode
 	and #~NEWMODE_FLAG
 	sta stat
 
+	; restart counter
+	lda #0
+	sta secs
+
+	; put a loop on it
+	lda #0
+	sta t2
+	sta t3
+
+poem_loop
+	; draw one random adjective
+	lda $d41b
+	and #$f
+	tax
+
+	; store the length of the word
+	lda data_adjective_lengths,x
+	sta t1
+
+	; put the address of the word offset
+	lda data_adjective_indices,x
+	sta dictCursor
+
+	ldy dictCursor
+	ldx t3
+-	lda data_adjective_data,y
+	and #$3f
+	sta $0400,x
+	iny
+	inx
+	dec t1
+	lda #0
+	cmp t1
+	bne -
+
+	; next line
+	lda t3
+	adc #$27
+	sta t3
+
+	inc t2
+	lda t2
+	cmp #$10
+	bne poem_loop
+
+	;lda (dictCursor)
+
+	; set a memory cursor to that item
+
 	; draw the intro text
 	; to the screen
-	jsr clear_screen
+	;jsr clear_screen
++	lda secs
+	cmp #INTRO_DELAY
+	bne +
+	ldx #BLANK_MODE
+	jsr setMode
 +	jmp loopEnd
 
 ; this section loops over a string and displays it

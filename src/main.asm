@@ -17,7 +17,7 @@ BLANK_MODE = $01
 POEM_MODE = $02
 
 MODE_COUNT = $03
-
+RAND = $D41B
 INTRO_DELAY = 1
 
 ; maybe some ram? no idea if this is
@@ -38,8 +38,8 @@ t4		.byte 0
 t5		.byte 0
 counter .byte 0
 modeTarget .word intro_mode
-RAND .word $D41B	; address of the random number
-									; generator on the SID
+dictCursor .word data_adjective_indices
+screenBank .byte $04
 
 ; start this code at $1000
 *=$1000
@@ -177,4 +177,4 @@ message
 
 .include "helpers.asm"
 .include "loop.asm"
-;.include "dict.asm"
+.include "dict.asm"

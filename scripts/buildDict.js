@@ -68,7 +68,7 @@ function formatDatablock(datablocks) {
       .byte ${datablocks[i].lengths.map(v => `\$${v.toString(16)}`).join(',')}
     data_${datablocks[i].name}_indices:
       ;; indices
-      .word ${d.map(v => `\$${v.toString(16)}`).join(',')}
+      .byte ${d.map(v => `\$${Math.min(255, v).toString(16)}`).join(',')}
     data_${datablocks[i].name}_data:
       ;; raw datablock
       .text "${datablocks[i].data}"
