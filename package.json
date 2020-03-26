@@ -7,6 +7,7 @@
     "dev": "forever --watchDirectory ./src -w launcher.js",
     "build": "npm run dict && cd src/ && make && npm run c64",
     "c64": "(killall x64sc || true) && /Applications/vice-sdl2-3.4-r37482/x64sc.app/Contents/MacOS/x64sc -autostart /Users/charlie/code/c64/beatnik/src/beatnik.prg",
+    "c64debug": "/Applications/C64Debugger.app/Contents/MacOS/C64Debugger -pass -prg /Users/charlie/code/c64/beatnik/src/beatnik.prg",
     "dict": "node ./scripts/buildDict.js > ./src/dict.asm",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
