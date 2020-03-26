@@ -3,3 +3,4 @@ node_modules/
 beatnik.tmp
 src/dict.asm
 *.prg
+log.txt

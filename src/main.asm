@@ -7,7 +7,9 @@
 
 
 ; a few constants for state machine
-VBLANK_FLAG = 1		; time to trigger a vblank
+VBLANK_FLAG = $01			; time to trigger a vblank
+NEWMODE_FLAG = $02		; mode has changed
+MODEREADY_FLAG = $04	; mode setup complete
 
 ; maybe some ram? no idea if this is
 ; a good spot
@@ -15,7 +17,7 @@ VBLANK_FLAG = 1		; time to trigger a vblank
 secs 	.byte 0
 ; some constants
 green 	.byte 5
-stat	 	.byte 0
+stat	 	.byte (NEWMODE_FLAG) ; main state variable
 ; some variables
 t1		.byte 0	; a bunch of temps
 t2		.byte 0
@@ -26,7 +28,10 @@ counter 	.byte 0
 tick 	.byte 0
 time 	.byte 0
 introFlag	.byte 0
-RAND .word $D41B
+RAND .word $D41B	; address of the random number
+									; generator on the SID
+ZERO .byte 0 			; this is probably very dumb
+ONE  .byte 1
 
 ; start this code at $1000
 *=$1000
@@ -108,7 +113,6 @@ randseed	; use SID for randomness
 		sta $D40F ; voice 3 frequency high byte
 		lda #$80  ; noise waveform, gate bit off
 		sta $D412 ; voice 3 control register
-		jsr drawIntro
 		jsr setup_vblank
 
 megaloop
@@ -164,4 +168,4 @@ message
 
 .include "loop.asm"
 .include "helpers.asm"
-.include "dict.asm"
+;.include "dict.asm"
