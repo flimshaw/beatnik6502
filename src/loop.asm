@@ -9,15 +9,32 @@ gameLoop
 
 +	jmp (modeTarget)	; run the intro mode
 
+; x reg = next mode
 setMode
-	lda #<blank_mode
-	sta modeTarget
-	lda #>blank_mode
-	sta modeTarget+1
-	lda stat
+	cpx #BLANK_MODE
+	bne +
+		lda #<blank_mode
+		sta modeTarget
+		lda #>blank_mode
+		sta modeTarget+1
++	cpx #POEM_MODE
+	bne +
+		lda #<poem_mode
+		sta modeTarget
+		lda #>poem_mode
+		sta modeTarget+1
++	cpx #INTRO_MODE
+	bne +
+		lda #<intro_mode
+		sta modeTarget
+		lda #>intro_mode
+		sta modeTarget+1
++	lda stat
 	ora #NEWMODE_FLAG
 	sta stat
 	rts
+
+
 
 colorCycling
 
@@ -77,16 +94,44 @@ intro_mode
 	; to the screen
 	jsr drawIntro
 
-+	jsr colorCycling
+	lda #0
+	sta secs
+
++	;jsr colorCycling
 
 	; timeout and inc mode
 	lda secs
 	cmp #INTRO_DELAY
 	bne +
+	ldx #BLANK_MODE
 	jsr setMode
 +	jmp loopEnd
 
 blank_mode
+	; skip first run stuff if not new
+	lda stat
+	and #NEWMODE_FLAG
+	cmp #0
+	beq +
+	; here's the init code
+	lda stat ; kill newmode
+	and #~NEWMODE_FLAG
+	sta stat
+
+	lda #0
+	sta secs
+	; draw the intro text
+	; to the screen
+	jsr clear_screen
++	lda secs
+	cmp #INTRO_DELAY
+	bne +
+	ldx #INTRO_MODE
+	jsr setMode
+
+	jmp loopEnd
+
+poem_mode
 	; skip first run stuff if not new
 	lda stat
 	and #NEWMODE_FLAG

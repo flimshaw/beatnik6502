@@ -11,7 +11,14 @@ VBLANK_FLAG = $01			; time to trigger a vblank
 NEWMODE_FLAG = $02		; mode has changed
 MODEREADY_FLAG = $04	; mode setup complete
 
-INTRO_DELAY = 3
+; some constants for mode types
+INTRO_MODE = $00
+BLANK_MODE = $01
+POEM_MODE = $02
+
+MODE_COUNT = $03
+
+INTRO_DELAY = 1
 
 ; maybe some ram? no idea if this is
 ; a good spot
@@ -21,6 +28,8 @@ time 	.byte 0
 ; some constants
 green 	.byte 5
 stat	 	.byte (NEWMODE_FLAG) ; main state variable
+mode		.byte 0
+nextMode	.byte 0
 ; some variables
 t1		.byte 0	; a bunch of temps
 t2		.byte 0
