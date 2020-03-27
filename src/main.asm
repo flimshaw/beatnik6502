@@ -24,6 +24,7 @@ POEM_DELAY = 5
 a = $fb
 b = $fc
 result = $fd
+dictCursor = $04
 
 ; maybe some ram? no idea if this is
 ; a good spot
@@ -43,7 +44,6 @@ t4		.byte 0
 t5		.byte 0
 counter .byte 0
 modeTarget .word intro_mode
-dictCursor .word data_adjective_indices
 screenBank .byte $04
 
 col .byte 0
@@ -183,7 +183,7 @@ setup_vblank
 								;there's no way back to the system
 .enc screen
 message
-.text "BeAtNik v 1.0 * "
+.text "Beatnik v 1.0 * "
 .enc none
 
 .include "helpers.asm"

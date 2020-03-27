@@ -64,7 +64,9 @@ draw_char
 
   rts
 
-; diy multiplication
+; extremely basic multiplication
+; by just repeatedly adding
+; good enough for punk rock
 mult
   ; zero out the result
   lda #0
@@ -89,27 +91,6 @@ multloop
 
 multend
   rts
-
-
-; basic multiplication routine
-; mult
-;       lda a
-;       sta mod+1		; modify code, this way we can use an immediate adc-command
-;       lda #$00
-;       tay			; initialisation of result: accu is lowbyte, and y-register is highbyte
-;       ldx b
-;       inx
-;
-; loop1	clc
-; loop2	dex
-;       beq end
-; mod		adc #$00		; becomes modified -> adc a
-;       bcc loop2
-;       iny
-;       bne loop1
-; end		sta result
-;       sty result+1
-;       rts
 
 ; clear the whole screen first
 clear_screen

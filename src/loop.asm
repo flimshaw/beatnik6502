@@ -136,7 +136,7 @@ poem_mode
 	lda stat
 	and #NEWMODE_FLAG
 	cmp #0
-	beq new_poem_loop
+	beq poem_loop
 	; here's the init code
 	lda stat ; kill newmode
 	and #~NEWMODE_FLAG
@@ -150,7 +150,87 @@ poem_mode
 	sta t2
 	sta t3
 	sta t4
-	jmp new_poem_loop
+	jmp poem_loop
+
+poem_loop
+	; if we're done, skip all this
+	lda t2
+	cmp #25
+	beq poem_end
+
+	; draw one random adjective
+	lda $d41b
+	and #$1f
+	tax
+
+	; store the length of the word
+	lda data_adjective_lengths,x
+	sta t1
+
+	; load the address into our zp
+	; address location, which shouldn't
+	; be in use right now... i think?
+
+	txa
+	asl ; double the index, since it's words
+	tax
+
+	lda data_adjective_indices,x
+	sta dictCursor
+
+	inx
+	lda data_adjective_indices,x
+	sta dictCursor+1
+
+	; load the current char
+-	ldy #0
+	lda (dictCursor),y
+	sta char
+
+	; load current column into x
+	inc t4
+	lda t4
+	sta col
+
+	; load current row into y
+	lda t3
+	sta row
+
+	; draw the char to the screen
+	jsr draw_char
+
+	; move the word cursor
+	clc
+	inc dictCursor
+	bcc jj	; handle page crossings
+	inc dictCursor+1
+jj
+	; check if we are done with this word
+	dec t1
+	lda #0
+	cmp t1
+	bne -
+
+	; next line
+	inc t3
+	lda #0
+	sta col
+	sta t4
+
+	; inc word counter
+	inc t2
+
+	jmp poem_end
+
+poem_end
+	;jsr colorCycling
+	lda secs
+	cmp #POEM_DELAY
+	bne +
+	ldx #BLANK_MODE
+	jsr setMode
++	jmp loopEnd
+
 
 test_loop
 	lda col
@@ -177,108 +257,6 @@ test_loop
 	lda #0
 	sta row
 +	jmp poem_end
-
-new_poem_loop
-	; if we're done, skip all this
-	lda t2
-	cmp #25
-	beq poem_end
-
-	; draw one random adjective
-	lda $d41b
-	and #$f
-	tax
-
-	; store the length of the word
-	lda data_adjective_lengths,x
-	sta t1
-
-	; put the address of the word offset
-	lda data_adjective_indices,x
-	sta dictCursor
-
-	; load the current char
--	ldx dictCursor
-	lda data_adjective_data,x
-	sta char
-
-	; load current column into x
-	inc t4
-	lda t4
-	sta col
-
-	; load current row into y
-	lda t3
-	sta row
-
-	; draw the char to the screen
-	jsr draw_char
-
-	; move the word cursor
-	inc dictCursor
-
-	; check if we are done with this word
-	dec t1
-	lda #0
-	cmp t1
-	bne -
-
-	; next line
-	inc t3
-	lda #0
-	sta col
-	sta t4
-
-	; inc word counter
-	inc t2
-
-	jmp poem_end
-
-poem_loop
-	; draw one random adjective
-	; per line for every line, up to 16
-	lda $d41b
-	and #$f
-	tax
-
-	; store the length of the word
-	lda data_adjective_lengths,x
-	sta t1
-
-	; put the address of the word offset
-	lda data_adjective_indices,x
-	sta dictCursor
-
-	ldy dictCursor
-	ldx t3
--	lda data_adjective_data,y
-	and #$3f
-	sta $0400,x
-	iny
-	inx
-	dec t1
-	lda #0
-	cmp t1
-	bne -
-
-	; next line
-	lda t3
-	adc #$27
-	sta t3
-
-	inc t2
-	lda t2
-	cmp #$10
-	bne poem_loop
-
-poem_end
-	;jsr colorCycling
-	lda secs
-	cmp #POEM_DELAY
-	bne +
-	ldx #BLANK_MODE
-	jsr setMode
-+	jmp loopEnd
 
 ; this section loops over a string and displays it
 drawIntro

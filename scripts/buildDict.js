@@ -62,19 +62,24 @@ function formatDatablock(datablocks) {
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;; ${datablocks[i].name}
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+    data_${datablocks[i].name}_data:
+      ;; raw datablock
+      .text "${datablocks[i].data}"
     data_${datablocks[i].name}_lengths:
       ;; word lengths
       .byte ${datablocks[i].lengths.map(v => `\$${v.toString(16)}`).join(',')}
     data_${datablocks[i].name}_indices:
       ;; indices
-      .byte ${d.map(v => `\$${Math.min(255, v).toString(16)}`).join(',')}
-    data_${datablocks[i].name}_data:
-      ;; raw datablock
-      .text "${datablocks[i].data}"
+      .word ${d.map(v => `\$${(v+0x1300).toString(16)}`).join(',')}
+
 
   `)
-  return g.join('')
+  let s = g.join('')
+  s = `
+  *=$1300
+  ${s}
+  `
+  return s
 }
 
 setTimeout(() => console.log(formatDatablock(processDict(dict))), 500)
