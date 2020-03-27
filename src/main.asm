@@ -20,6 +20,10 @@ MODE_COUNT = $03
 RAND = $D41B
 INTRO_DELAY = 1
 
+a = $fb
+b = $fc
+result = $fd
+
 ; maybe some ram? no idea if this is
 ; a good spot
 *=$0901
@@ -40,6 +44,11 @@ counter .byte 0
 modeTarget .word intro_mode
 dictCursor .word data_adjective_indices
 screenBank .byte $04
+
+col .byte 0
+row .byte 0
+char .byte 0
+addr .word 0
 
 ; start this code at $1000
 *=$1000
