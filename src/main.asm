@@ -120,7 +120,7 @@ textcolor	; set green on black text
 		bne textcolor
 
 		; setup fonts
-		lda #$2
+		lda #23
 		ora 53272
 		sta 53272
 
@@ -180,10 +180,13 @@ setup_vblank
 		pla 				; restore
 		rts 				; we better don't RTS, the ROMS are now switched off,
 								;there's no way back to the system
-
+.enc screen
 message
 .text "BeAtNik v 1.0 * "
+.enc none
 
 .include "helpers.asm"
 .include "loop.asm"
+.enc screen
 .include "dict.asm"
+.enc none

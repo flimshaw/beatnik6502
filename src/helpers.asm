@@ -50,14 +50,6 @@ draw_char
   adc #$04
   sta result+1
 
-  ; next, swap the result bytes to
-  ; little endian
-  ; ldx result
-  ; lda result+1
-  ; sta result
-  ; txa
-  ; sta result+1
-
   ; finally, write the char to the screen
   lda char
   ldy #0

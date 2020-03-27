@@ -157,8 +157,9 @@ test_loop
 	and #$f
 	tax
 	lda message,x
-	and #$3f
 	sta char
+
+	jsr draw_char
 
 	clc
 	inc col
@@ -169,14 +170,12 @@ test_loop
 	sta col
 	clc
 	inc row
-	lda #24
+	lda #25
 	cmp row
 	bne +
 	lda #0
 	sta row
-	jmp poem_end
-+	jsr draw_char
-	jmp poem_end
++	jmp poem_end
 
 new_poem_loop
 	; draw one random adjective
