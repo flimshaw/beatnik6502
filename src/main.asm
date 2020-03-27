@@ -19,6 +19,7 @@ POEM_MODE = $02
 MODE_COUNT = $03
 RAND = $D41B
 INTRO_DELAY = 1
+POEM_DELAY = 5
 
 a = $fb
 b = $fc

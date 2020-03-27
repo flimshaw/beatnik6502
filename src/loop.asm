@@ -136,7 +136,7 @@ poem_mode
 	lda stat
 	and #NEWMODE_FLAG
 	cmp #0
-	beq test_loop
+	beq new_poem_loop
 	; here's the init code
 	lda stat ; kill newmode
 	and #~NEWMODE_FLAG
@@ -150,6 +150,7 @@ poem_mode
 	sta t2
 	sta t3
 	sta t4
+	jmp new_poem_loop
 
 test_loop
 	lda col
@@ -178,6 +179,11 @@ test_loop
 +	jmp poem_end
 
 new_poem_loop
+	; if we're done, skip all this
+	lda t2
+	cmp #25
+	beq poem_end
+
 	; draw one random adjective
 	lda $d41b
 	and #$f
@@ -194,14 +200,16 @@ new_poem_loop
 	; load the current char
 -	ldx dictCursor
 	lda data_adjective_data,x
-	and #$3f
+	sta char
 
 	; load current column into x
-	ldx t4
 	inc t4
+	lda t4
+	sta col
 
 	; load current row into y
-	ldy t3
+	lda t3
+	sta row
 
 	; draw the char to the screen
 	jsr draw_char
@@ -217,17 +225,18 @@ new_poem_loop
 
 	; next line
 	inc t3
+	lda #0
+	sta col
+	sta t4
 
 	; inc word counter
 	inc t2
-	lda t2
-	cmp #$10
-	bne new_poem_loop
 
 	jmp poem_end
 
 poem_loop
 	; draw one random adjective
+	; per line for every line, up to 16
 	lda $d41b
 	and #$f
 	tax
@@ -262,20 +271,13 @@ poem_loop
 	cmp #$10
 	bne poem_loop
 
-	;lda (dictCursor)
-
-	; set a memory cursor to that item
-
-	; draw the intro text
-	; to the screen
-	;jsr clear_screen
 poem_end
-	jsr colorCycling
-	; lda secs
-	; cmp #INTRO_DELAY
-	; bne +
-	; ldx #BLANK_MODE
-	; jsr setMode
+	;jsr colorCycling
+	lda secs
+	cmp #POEM_DELAY
+	bne +
+	ldx #BLANK_MODE
+	jsr setMode
 +	jmp loopEnd
 
 ; this section loops over a string and displays it
@@ -283,8 +285,8 @@ drawIntro
     ldx #$0
     ldy #$0
 introLoop  lda message,y    ; put the msg + x offset in accumulator
-    and #$3f                ; strip the top two bytes away
-    clc
+    ; and #$3f                ; strip the top two bytes away
+    ; clc
     sta $0400,x             ; put the string byte into the screen + offset
     sta $0500,x
     sta $0600,x
