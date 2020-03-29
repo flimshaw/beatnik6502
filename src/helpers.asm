@@ -15,7 +15,7 @@ tick_time
     sta secs
 +   rts
 
-POS_ARTICLE = 0 ; = article
+
 POS_VERB_TRANSITIVE = 1 ; = verb.trans
 POS_VERB_INTRANSITIVE = 2 ; = verb.intrans
 POS_ADJECTIVE = 3 ; = adjective
@@ -28,6 +28,7 @@ POS_CONJUNCTION = 9 ; = conjunction
 POS_POSSESSIVE_PRONOUN = 10 ; = possessive pronoun
 POS_SUBJECTIVE_PRONOUN = 11 ; = subjective pronoun
 POS_OBJECTIVE_PRONOUN = 12 ; = objective pronoun
+POS_ARTICLE = 13 ; = article
 
 ; macro to copy a 16 bit pointer into a
 ; target block for indirect addressing
@@ -67,21 +68,19 @@ setPos  .macro
         sta dict_count
         .endm
 
-
+fMod    .macro
+        lda \1
+        sta ta
+        lda \2
+        sta tb
+        jsr mod
+        .endm
 
 ; queues up a random word from the
 ; currently selected dictionary
 randWord
-        ; reset the dict cursor to the start
-        ; of the dictionary
-        ; #setPtr p_dict, dictCursor
-
         ; get a random index from this dict
-        lda $d41b
-        sta ta
-        lda dict_count
-        sta tb
-        jsr mod
+        #fMod $d41b, dict_count
 
         ; load the word length from the table
         tay
@@ -106,43 +105,18 @@ randWord
 ; sets up pointers and counters to
 ; draw a random pos to the screen
 load_word
-  ; .switch pos
-  ; .case POS_ARTICLE
-  ; .case POS_VERB_TRANSITIVE
-  ; .case POS_VERB_INTRANSITIVE
-  ; .case POS_ADJECTIVE
-  ; .case POS_ADVERB
-  ; .case POS_NOUN_THING
-  ; .case POS_NOUN_PERSON
-  ; .case POS_NOUN_PLACE
-  ; .case POS_PREPOSITION
-  ; .case POS_CONJUNCTION
-  ; .case POS_POSSESSIVE_PRONOUN
-  ; .case POS_SUBJECTIVE_PRONOUN
-  ; .case POS_OBJECTIVE_PRONOUN
-  ; .default
-    #setPos data_adjective
+        ; clc
+        ; lda #3
+        ; cmp #3
+        ; bne load_default
+; load_default
+  #setPos data_adverb
+; load_word_done
+  ; #setPos data_nouns_things
+  jsr randWord
 
-    ; pick a random index to grab
-    ; a word within the range available
-    jsr randWord
-    ; set the dictCursor to the start
-    ; of that word
-    ; clc
-    ; adc dictCursor
-    ; bcc +
-    ; inc dictCursor+1
-; +   nop
-  ; .endswitch
   rts
 
-mod
-      lda ta
-      sec
-modl  sbc tb
-      bcs modl
-      adc tb
-      rts
 
 draw_word
   	   ; load the current char
@@ -243,6 +217,15 @@ multloop
 
 multend
   rts
+
+; mod function
+mod
+      lda ta
+      sec
+modl  sbc tb
+      bcs modl
+      adc tb
+      rts
 
 ; clear the whole screen first
 clear_screen

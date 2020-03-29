@@ -169,7 +169,7 @@ poem_mode
 	lda #5
 	sta length
 	jsr draw_word
-	
+
 	lda #0
 	sta col
 
@@ -190,14 +190,15 @@ poem_loop
 	cmp #16
 	beq poem_reset
 
-	; pick a random pos
-	lda $d41b
-	and #$1f
-	sta pos
+
 
 	lda #3
 	sta counter
--	jsr load_word
+-
+	; pick a random pos
+	lda #3
+	sta pos
+	jsr load_word
 	jsr draw_word
 	lda #$20
 	inc col

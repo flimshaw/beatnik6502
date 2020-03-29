@@ -3,7 +3,9 @@ const path = require('path')
 const readline = require('readline')
 const folderPath = path.resolve(`${__dirname}`,'../dict')
 
+const START_ADDR = 0x1300
 const dict = {}
+let offset = START_ADDR;
 
 fs.readdirSync(folderPath).map(fileName => {
   const f = path.join(folderPath, fileName)
@@ -53,29 +55,37 @@ function processDict(d) {
   return datablocks
 }
 
+function getSize(block) {
+  // console.log(block.data.length)
+  return parseInt(block.data.length)+parseInt(block.indices.length*2)+parseInt(block.lengths.length)+1
+}
+
 function formatDatablock(datablocks) {
   let k = datablocks.map(d => {
     return d.indices;
   })
-  let g = k.map((d,i) => `
+  let g = k.map((d,i) => {
+    const s = `
 
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;; ${datablocks[i].name}
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    data_${datablocks[i].name}_data:
-      ;; raw datablock
-      .text "${datablocks[i].data}"
-    data_${datablocks[i].name}_lengths:
-      ;; word lengths
-      .byte ${datablocks[i].lengths.map(v => `\$${v.toString(16)}`).join(',')}
-    data_${datablocks[i].name}_indices:
-      ;; indices
-      .word ${d.map(v => `\$${(v+0x1300).toString(16)}`).join(',')}
-    data_${datablocks[i].name}_count:
-      .byte $${datablocks[i].indices.length.toString(16)}
-
-
-  `)
+      ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+      ;; ${datablocks[i].name}
+      ;; total size: ${getSize(datablocks[i])} bytes
+      ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+      data_${datablocks[i].name}_data:
+        ;; raw datablock
+        .text "${datablocks[i].data}"
+      data_${datablocks[i].name}_lengths:
+        ;; word lengths
+        .byte ${datablocks[i].lengths.map(v => `\$${v.toString(16)}`).join(',')}
+      data_${datablocks[i].name}_indices:
+        ;; indices
+        .word ${d.map(v => `\$${(v+offset).toString(16)}`).join(',')}
+      data_${datablocks[i].name}_count:
+        .byte $${datablocks[i].indices.length.toString(16)}
+    `;
+    offset += getSize(datablocks[i])
+    return s
+  })
   let s = g.join('')
   s = `
   *=$1300
