@@ -30,6 +30,8 @@ POS_SUBJECTIVE_PRONOUN = 11 ; = subjective pronoun
 POS_OBJECTIVE_PRONOUN = 12 ; = objective pronoun
 POS_ARTICLE = 13 ; = article
 
+PET_OFFSET = $30
+
 ; macro to copy a 16 bit pointer into a
 ; target block for indirect addressing
 ; later
@@ -75,6 +77,18 @@ fMod    .macro
         sta tb
         jsr mod
         .endm
+
+incPoemNumber
+        ldx #4
+-       inc poem_number,x
+        lda poem_number,x
+        cmp #$3a
+        bne +
+        lda #$30
+        sta poem_number,x
+        dex
+        jmp -
++       rts
 
 ; queues up a random word from the
 ; currently selected dictionary
@@ -135,13 +149,14 @@ load_dict
         sta p_indices+1
         inx
 
-        ; and just copy the count
+        ; wordcount
         lda dict_index,x
         sta p_count
         inx
         lda dict_index,x
         sta p_count+1
 
+        ; and copy wordcount asap
         ldy #0
         lda (p_count),y
         sta dict_count
@@ -152,17 +167,8 @@ load_dict
 ; sets up pointers and counters to
 ; draw a random pos to the screen
 load_word
-        ; clc
-        ; lda #3
-        ; cmp #3
-        ; bne load_default
-        ; load_default
         jsr load_dict
-        ; #setPos data_adverb
-        ; load_word_done
-        ; #setPos data_nouns_things
         jsr randWord
-
         rts
 
 draw_word
@@ -195,11 +201,11 @@ dloop ldy #0
 draw_char
 
   ; store registers
-  ; pha
-  ; tya
-  ; pha
-  ; txa
-  ; pha
+  pha
+  tya
+  pha
+  txa
+  pha
 
   ; determine which page
   lda row
@@ -229,11 +235,11 @@ draw_char
   sta (result),y
 
   ; restore registers
-  ; pla
-  ; tax
-  ; pla
-  ; tay
-  ; pla
+  pla
+  tax
+  pla
+  tay
+  pla
 
   rts
 

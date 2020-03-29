@@ -20,7 +20,7 @@ POEM_MODE = $02
 MODE_COUNT = $03
 RAND = $D41B
 INTRO_DELAY = 1
-POEM_DELAY = 5
+POEM_DELAY = 1
 
 a = $fb
 b = $fc
@@ -34,11 +34,12 @@ length = $0b
 p_dict = $20
 p_lengths = $22
 p_indices = $24
-p_count = $26
+p_count = $2c
 ; vars for specific word generation machinery
-w1 = $28
-w2 = $2a
-w3 = $2c
+w1 = $26
+w2 = $28
+w3 = $2a
+
 ; maybe some ram? no idea if this is
 ; a good spot
 *=$0900
@@ -219,5 +220,5 @@ message
 poem_title
 .text "Poem #"
 poem_number
-.text "00001"
+.text "00000"
 .enc none

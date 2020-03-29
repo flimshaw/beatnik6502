@@ -97,9 +97,7 @@ intro_mode
 	lda #0
 	sta secs
 
-+	;jsr colorCycling
-
-	; timeout and inc mode
++	; timeout and inc mode
 	lda secs
 	cmp #INTRO_DELAY
 	bne +
@@ -154,13 +152,11 @@ poem_mode
 	sta t3
 	sta t4
 
+	; increment the poem count
+	jsr incPoemNumber
+
 	; draw the poem title
 	#setPtr poem_title, dictCursor
-	; lda #<poem_title
-	; sta dictCursor
-	; lda #>poem_title
-	; sta dictCursor+1
-
 	lda #6
 	sta length
 	jsr draw_word
