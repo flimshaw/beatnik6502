@@ -132,14 +132,17 @@ blank_mode
 	jmp loopEnd
 
 poem_mode
+
 	; initialization
 	lda stat
 	and #NEWMODE_FLAG
 	cmp #0
 	beq poem_loop
+
 	; here's the init code
-	lda stat ; kill newmode
+	lda stat ; kill newmode + done
 	and #~NEWMODE_FLAG
+	and #~MODEDONE_FLAG
 	sta stat
 
 	; restart counter
@@ -150,69 +153,79 @@ poem_mode
 	sta t2
 	sta t3
 	sta t4
+
+	; draw the poem title
+	#setPtr poem_title, dictCursor
+	; lda #<poem_title
+	; sta dictCursor
+	; lda #>poem_title
+	; sta dictCursor+1
+
+	lda #6
+	sta length
+	jsr draw_word
+
+	#setPtr poem_number, dictCursor
+	lda #5
+	sta length
+	jsr draw_word
+	
+	lda #0
+	sta col
+
+	lda #3
+	sta row
+
 	jmp poem_loop
 
 poem_loop
-	; if we're done, skip all this
-	lda t2
-	cmp #25
-	beq poem_end
 
-	; draw one random adjective
-	lda $d41b
-	and #$3f
-	tax
+	; check for doneness
+	lda stat
+	and #MODEDONE_FLAG
+	bne poem_end
+
+	; if we're done, skip all this
+	lda row
+	cmp #16
+	beq poem_reset
 
 	; pick a random pos
-	; lda $d41b
-	; and #$f
-	; sta pos
+	lda $d41b
+	and #$1f
+	sta pos
 
-	; load up a word based on this pos
-	jsr load_word
-
-	; draw the word to the screen
-	; at the current cursor location
-	; jsr draw_word
-
-	; load the current char
--	ldy #0
-	lda (dictCursor),y
+	lda #3
+	sta counter
+-	jsr load_word
+	jsr draw_word
+	lda #$20
+	inc col
 	sta char
-
-	; load current column into x
-	inc t4
-	lda t4
-	sta col
-
-	; load current row into y
-	lda t3
-	sta row
-
-	; draw the char to the screen
 	jsr draw_char
-
-	; move the word cursor
-	clc
-	inc dictCursor
-	bcc jj	; handle page crossings
-	inc dictCursor+1
-jj
-	; check if we are done with this word
-	dec t1
-	lda #0
-	cmp t1
+	dec counter
 	bne -
 
-	; next line
-	inc t3
+
+	inc row
 	lda #0
 	sta col
-	sta t4
 
-	; inc word counter
-	inc t2
+ 	; inc word counter
+	;inc row
 
+	jmp poem_end
+
+poem_reset
+	lda #0
+	sta row
+	lda stat
+	ora #MODEDONE_FLAG
+	sta stat
+	clc
+	inc poem_count
+	bne poem_end
+	inc poem_count+1
 	jmp poem_end
 
 poem_end

@@ -10,6 +10,7 @@
 VBLANK_FLAG = $01			; time to trigger a vblank
 NEWMODE_FLAG = $02		; mode has changed
 MODEREADY_FLAG = $04	; mode setup complete
+MODEDONE_FLAG = $08		; modedone flag
 
 ; some constants for mode types
 INTRO_MODE = $00
@@ -28,7 +29,12 @@ dictCursor = $04
 pos = $06
 dict = $08
 item = $0a
+length = $0b
+cursor = $0c
 
+p_dict = $20
+p_lengths = $22
+p_indices = $24
 ; vars for specific word generation machinery
 
 ; maybe some ram? no idea if this is
@@ -47,8 +53,15 @@ t2		.byte 0
 t3		.byte 0
 t4		.byte 0
 t5		.byte 0
+ta		.byte 0
+tb		.byte 0
+tc		.byte 0
+
+poem_count .word 0
+dict_count .byte $26
+
 counter .byte 0
-modeTarget .word intro_mode
+modeTarget .word poem_mode
 screenBank .byte $04
 
 col .byte 0
@@ -186,13 +199,18 @@ setup_vblank
 		pla 				; restore
 		rts 				; we better don't RTS, the ROMS are now switched off,
 								;there's no way back to the system
-.enc screen
-message
-.text "Beatnik v 1.0 * "
-.enc none
+
 
 .include "helpers.asm"
 .include "loop.asm"
+
+; string data
 .enc screen
 .include "dict.asm"
+message
+.text "Beatnik v 1.0 * "
+poem_title
+.text "Poem #"
+poem_number
+.text "00001"
 .enc none

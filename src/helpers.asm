@@ -29,38 +29,85 @@ POS_POSSESSIVE_PRONOUN = 10 ; = possessive pronoun
 POS_SUBJECTIVE_PRONOUN = 11 ; = subjective pronoun
 POS_OBJECTIVE_PRONOUN = 12 ; = objective pronoun
 
+; macro to copy a 16 bit pointer into a
+; target block for indirect addressing
+; later
 setPtr  .macro
-        lda #\1
+        lda #<\1
         sta \2
-        lda #\1+1
+        lda #>\1+1
         sta \2+1
         .endm
 
+; sets up dictionary pointers for writing
+; a particular part of speech
 setPos  .macro
+        ; store the pointer to dict data
         lda #<\1_data
-        sta dict
+        sta p_dict
         lda #>\1_data+1
-        sta dict+1
+        sta p_dict+1
 
-      	; store the length of the word
-      	lda \1_lengths,x
-      	sta t1
+      	; and the dict lengths
+      	lda #<\1_lengths
+      	sta p_lengths
+        ; and the dict lengths
+        lda #>\1_lengths
+        sta p_lengths+1
 
-      	txa
-      	asl ; double the index, since it's words
-      	tax
+        ; and the dict indices
+        lda #<\1_indices
+        sta p_indices
+        ; and the dict indices
+        lda #>\1_indices
+        sta p_indices+1
 
-      	lda \1_indices,x
-      	sta dictCursor
-
-      	inx
-      	lda \1_indices,x
-      	sta dictCursor+1
+        ; and the dict_count
+        lda \1_count
+        sta dict_count
         .endm
+
+
+
+; queues up a random word from the
+; currently selected dictionary
+randWord
+        ; reset the dict cursor to the start
+        ; of the dictionary
+        ; #setPtr p_dict, dictCursor
+
+        ; get a random index from this dict
+        lda $d41b
+        and #$7f
+        ; sta ta
+        ; lda dict_count
+        ; sta tb
+        ; jsr mod
+
+        ; load the word length from the table
+        tay
+        lda (p_lengths),y
+        sta length
+
+        ; double the index and send it to y
+        tya
+        asl
+        tay
+
+        ; load the target word address
+        ; into the dict cursor
+        lda (p_indices),y
+        sta dictCursor
+        iny
+        lda (p_indices),y
+        sta dictCursor+1
+
+        rts
+
 ; sets up pointers and counters to
 ; draw a random pos to the screen
 load_word
-  .switch pos
+  ; .switch pos
   ; .case POS_ARTICLE
   ; .case POS_VERB_TRANSITIVE
   ; .case POS_VERB_INTRANSITIVE
@@ -74,10 +121,53 @@ load_word
   ; .case POS_POSSESSIVE_PRONOUN
   ; .case POS_SUBJECTIVE_PRONOUN
   ; .case POS_OBJECTIVE_PRONOUN
-  .default
+  ; .default
     #setPos data_adjective
-  .endswitch
+
+    ; pick a random index to grab
+    ; a word within the range available
+    jsr randWord
+    ; set the dictCursor to the start
+    ; of that word
+    ; clc
+    ; adc dictCursor
+    ; bcc +
+    ; inc dictCursor+1
+; +   nop
+  ; .endswitch
   rts
+
+mod
+    lda ta
+    sec
+-   sbc tb
+    bcs -
+    adc ta
+    rts
+
+draw_word
+  	   ; load the current char
+dloop ldy #0
+	    lda (dictCursor),y
+    	sta char
+
+      ; draw the char to the screen
+    	jsr draw_char
+
+      ; move the cursor right one
+      inc col
+
+    	; move the word cursor right also
+    	clc
+    	inc dictCursor
+    	bne +	; handle page crossings
+    	inc dictCursor+1
+
+    	; dec the length remaining
++    	clc
+      dec length
+    	bne dloop  ; rinse & repeat
+      rts
 
 ; x,y,acc = x,y,char
 ; draws a char at the given location in
@@ -85,11 +175,11 @@ load_word
 draw_char
 
   ; store registers
-  pha
-  tya
-  pha
-  txa
-  pha
+  ; pha
+  ; tya
+  ; pha
+  ; txa
+  ; pha
 
   ; determine which page
   lda row
@@ -116,15 +206,14 @@ draw_char
 
   ; finally, write the char to the screen
   lda char
-  ldy #0
   sta (result),y
 
   ; restore registers
-  pla
-  tax
-  pla
-  tay
-  pla
+  ; pla
+  ; tax
+  ; pla
+  ; tay
+  ; pla
 
   rts
 

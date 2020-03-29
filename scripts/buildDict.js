@@ -71,6 +71,8 @@ function formatDatablock(datablocks) {
     data_${datablocks[i].name}_indices:
       ;; indices
       .word ${d.map(v => `\$${(v+0x1300).toString(16)}`).join(',')}
+    data_${datablocks[i].name}_count:
+      .byte $${datablocks[i].indices.length.toString(16)}
 
 
   `)
