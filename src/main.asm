@@ -26,22 +26,29 @@ a = $fb
 b = $fc
 result = $fd
 dictCursor = $04
-pos = $06
 dict = $08
-item = $0a
+
 length = $0b
-cursor = $0c
+; w1 = $02
 
 p_dict = $20
 p_lengths = $22
 p_indices = $24
+p_count = $26
 ; vars for specific word generation machinery
-
+w1 = $28
+w2 = $2a
+w3 = $2c
 ; maybe some ram? no idea if this is
 ; a good spot
-*=$0901
+*=$0900
 secs 	.byte 0
 time 	.byte 0
+
+cursor .byte 0
+item	 .byte 0
+pos .byte 0
+
 ; some constants
 green 	.byte 5
 stat	 	.byte (NEWMODE_FLAG) ; main state variable
@@ -58,7 +65,7 @@ tb		.byte 0
 tc		.byte 0
 
 poem_count .word 0
-dict_count .byte $26
+dict_count .byte 2
 
 counter .byte 0
 modeTarget .word poem_mode

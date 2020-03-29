@@ -102,6 +102,53 @@ randWord
 
         rts
 
+load_dict
+        ; figure out which dictionary to load
+        ; based on the pos
+        lda pos
+        asl ; mult by 8 to get the staring index
+        asl
+        asl
+        tax
+
+        ; dictionary
+        lda dict_index,x
+        sta dict
+        inx
+        lda dict_index,x
+        sta dict+1
+        inx
+
+        ; lengths
+        lda dict_index,x
+        sta p_lengths
+        inx
+        lda dict_index,x
+        sta p_lengths+1
+        inx
+
+        ; indices
+        lda dict_index,x
+        sta p_indices
+        inx
+        lda dict_index,x
+        sta p_indices+1
+        inx
+
+        ; and just copy the count
+        lda dict_index,x
+        sta p_count
+        inx
+        lda dict_index,x
+        sta p_count+1
+
+        ldy #0
+        lda (p_count),y
+        sta dict_count
+
+
+        rts
+
 ; sets up pointers and counters to
 ; draw a random pos to the screen
 load_word
@@ -109,14 +156,14 @@ load_word
         ; lda #3
         ; cmp #3
         ; bne load_default
-; load_default
-  #setPos data_adverb
-; load_word_done
-  ; #setPos data_nouns_things
-  jsr randWord
+        ; load_default
+        jsr load_dict
+        ; #setPos data_adverb
+        ; load_word_done
+        ; #setPos data_nouns_things
+        jsr randWord
 
-  rts
-
+        rts
 
 draw_word
   	   ; load the current char

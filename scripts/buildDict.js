@@ -3,7 +3,7 @@ const path = require('path')
 const readline = require('readline')
 const folderPath = path.resolve(`${__dirname}`,'../dict')
 
-const START_ADDR = 0x1300
+const START_ADDR = 0x4000
 const dict = {}
 let offset = START_ADDR;
 
@@ -86,12 +86,56 @@ function formatDatablock(datablocks) {
     offset += getSize(datablocks[i])
     return s
   })
+
   let s = g.join('')
+
+  s += `
+    ;; master index
+    dict_index
+      .word ${datablocks.map(b => [
+        `data_${b.name}_data`,
+        `data_${b.name}_lengths`,
+        `data_${b.name}_indices`,
+        `data_${b.name}_count`,
+      ]).flat().join(',')}
+  `;
+
   s = `
-  *=$1300
+  *=$${START_ADDR.toString(16)}
   ${s}
   `
   return s
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 setTimeout(() => console.log(formatDatablock(processDict(dict))), 500)

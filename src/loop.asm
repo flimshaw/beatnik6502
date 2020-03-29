@@ -190,13 +190,12 @@ poem_loop
 	cmp #16
 	beq poem_reset
 
-
-
 	lda #3
 	sta counter
 -
 	; pick a random pos
-	lda #3
+	lda RAND
+	and #$7
 	sta pos
 	jsr load_word
 	jsr draw_word
