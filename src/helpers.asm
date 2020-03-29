@@ -78,11 +78,10 @@ randWord
 
         ; get a random index from this dict
         lda $d41b
-        and #$7f
-        ; sta ta
-        ; lda dict_count
-        ; sta tb
-        ; jsr mod
+        sta ta
+        lda dict_count
+        sta tb
+        jsr mod
 
         ; load the word length from the table
         tay
@@ -138,12 +137,12 @@ load_word
   rts
 
 mod
-    lda ta
-    sec
--   sbc tb
-    bcs -
-    adc ta
-    rts
+      lda ta
+      sec
+modl  sbc tb
+      bcs modl
+      adc tb
+      rts
 
 draw_word
   	   ; load the current char
