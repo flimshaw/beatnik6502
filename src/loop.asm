@@ -160,27 +160,20 @@ poem_loop
 
 	; draw one random adjective
 	lda $d41b
-	and #$1f
+	and #$3f
 	tax
 
-	; store the length of the word
-	lda data_adjective_lengths,x
-	sta t1
+	; pick a random pos
+	; lda $d41b
+	; and #$f
+	; sta pos
 
-	; load the address into our zp
-	; address location, which shouldn't
-	; be in use right now... i think?
+	; load up a word based on this pos
+	jsr load_word
 
-	txa
-	asl ; double the index, since it's words
-	tax
-
-	lda data_adjective_indices,x
-	sta dictCursor
-
-	inx
-	lda data_adjective_indices,x
-	sta dictCursor+1
+	; draw the word to the screen
+	; at the current cursor location
+	; jsr draw_word
 
 	; load the current char
 -	ldy #0

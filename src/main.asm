@@ -25,6 +25,11 @@ a = $fb
 b = $fc
 result = $fd
 dictCursor = $04
+pos = $06
+dict = $08
+item = $0a
+
+; vars for specific word generation machinery
 
 ; maybe some ram? no idea if this is
 ; a good spot
