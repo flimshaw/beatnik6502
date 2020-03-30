@@ -13,33 +13,6 @@
 ; POS_ARTICLE = 13 ; = article
 
 
-
-  k_print_str0 = $ab1e
-  k_print_newline = $aad7
-
-  k_setlfs = $ffba
-  k_open = $ffc0
-  k_chkout = $ffc9
-  k_close = $ffc3
-
-  ; "open" the printer device
-print:
-      lda #4  ; logical file number
-      ldx #4  ; device
-      ldy #4  ; secondary address
-      ; jsr k_setlfs
-      ; jsr k_open
-      ; ldx #4
-      ; jsr k_chkout
-      ; lda #4
-      ; jsr k_close
-
-      rts
-
-str_hello:
-   .text "HELLO WORLD.", 0
-
-
 poem_mode
 
 	; initialization
@@ -53,8 +26,6 @@ poem_mode
 	and #~NEWMODE_FLAG
 	and #~MODEDONE_FLAG
 	sta stat
-
-  jsr print
 
 	; restart counter
 	lda #0

@@ -1,8 +1,13 @@
 ; not sure what this does! some kind of basic launcher
-*=$0801
-.byte $0c, $08, $0a, $00, $9e, $20
-.byte $34, $30, $39, $36, $00, $00
-.byte $00
+; *=$0801
+; .byte $0c, $08, $0a, $00, $9e, $20
+; .byte $34, $30, $39, $36, $00, $00
+; .byte $00
+
+* = $0801                               ; BASIC start address (#2049)
+.byte $0d,$08,$dc,$07,$9e,$20,$34,$39   ; BASIC loader to start at $c000
+.byte $31,$35,$32,$00,$00,$00           ; puts BASIC line 2012 SYS 49152
+;* = $c000     				; start address for 6502 code
 
 
 
@@ -82,7 +87,8 @@ addr .word 0
 poem_pos_data .byte $0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0
 
 ; start this code at $1000
-*=$1000
+*=$c000
+
 jmp setup
 
 irq
