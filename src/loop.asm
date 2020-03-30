@@ -97,7 +97,11 @@ intro_mode
 	lda #0
 	sta secs
 
+	; try printing
+	jsr print
+
 +	; timeout and inc mode
+	clc
 	lda secs
 	cmp #INTRO_DELAY
 	bne +
