@@ -10,7 +10,7 @@
 ;* = $c000     				; start address for 6502 code
 
 
-
+; CONSTANTS
 ; a few constants for state machine
 VBLANK_FLAG = $01			; time to trigger a vblank
 NEWMODE_FLAG = $02		; mode has changed
@@ -43,7 +43,15 @@ p_count = $aa
 
 ; maybe some ram? no idea if this is
 ; a good spot
-*=$0900
+; *=$0900
+
+; start this code at $1000
+*=$c000
+
+; jump straight to setup
+jmp setup
+
+; a bunch of variables
 secs 	.byte 0
 time 	.byte 0
 
@@ -86,10 +94,6 @@ addr .word 0
 ; indices
 poem_pos_data .byte $0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0
 
-; start this code at $1000
-*=$c000
-
-jmp setup
 
 irq
 	; Being all kernal irq handlers switched off we have to do more work by ourselves.
