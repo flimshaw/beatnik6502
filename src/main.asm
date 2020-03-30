@@ -20,25 +20,21 @@ POEM_MODE = $02
 MODE_COUNT = $03
 RAND = $D41B
 INTRO_DELAY = 1
-POEM_DELAY = 1
+POEM_DELAY = 5
 
 a = $fb
 b = $fc
 result = $fd
-dictCursor = $04
-dict = $08
+dictCursor = $b6
+dict = $3008
 
-length = $0b
+length = $300b
 ; w1 = $02
 
-p_dict = $20
-p_lengths = $22
-p_indices = $24
-p_count = $2c
-; vars for specific word generation machinery
-w1 = $26
-w2 = $28
-w3 = $2a
+p_dict = $b4
+p_lengths = $a5
+p_indices = $a7
+p_count = $aa
 
 ; maybe some ram? no idea if this is
 ; a good spot
@@ -55,6 +51,7 @@ green 	.byte 5
 stat	 	.byte (NEWMODE_FLAG) ; main state variable
 mode		.byte 0
 nextMode	.byte 0
+
 ; some variables
 t1		.byte 0	; a bunch of temps
 t2		.byte 0
@@ -67,15 +64,22 @@ tc		.byte 0
 
 poem_count .word 0
 dict_count .byte 2
+rand_max	 .byte 4
+poem_cursor .byte 0
 
 counter .byte 0
-modeTarget .word poem_mode
+modeTarget .word intro_mode
 screenBank .byte $04
 
 col .byte 0
 row .byte 0
 char .byte 0
 addr .word 0
+
+; allocate an 8x8 block for pos definitions
+; or possibly complete poem defs w/ dict
+; indices
+poem_pos_data .byte $0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0
 
 ; start this code at $1000
 *=$1000
@@ -210,6 +214,7 @@ setup_vblank
 
 
 .include "helpers.asm"
+.include "poem.asm"
 .include "loop.asm"
 
 ; string data
