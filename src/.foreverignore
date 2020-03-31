@@ -1,2 +1,4 @@
 dict.asm
 *.prg
+*.dbg
+*.labels

@@ -166,9 +166,6 @@ poem_loop
 	lda #0
 	sta col
 
- 	; inc word counter
-	;inc row
-
 	jmp poem_end
 
 poem_reset
@@ -189,6 +186,6 @@ poem_end
 	lda secs
 	cmp #POEM_DELAY
 	bne +
-	ldx #BLANK_MODE
+	ldx #INTRO_MODE
 	jsr setMode
 +	jmp loopEnd

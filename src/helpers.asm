@@ -26,20 +26,29 @@ k_close = $ffc3
 
   ; "open" the printer device
 print:
-      lda #4  ; logical file number
+      lda #1  ; logical file number
       ldx #4  ; device
-      ldy #4  ; secondary address
+      ldy #7  ; secondary address
       jsr k_setlfs
+
       jsr k_open
-      ldx #4
+
+      ldx #1
       jsr k_chkout
-      lda #4
+
+      lda #<str_hello
+      ldy #>str_hello
+      jsr k_print_str0
+
+      jsr k_print_newline
+
+      lda #1
       jsr k_close
 
       rts
 
 str_hello:
-   .text "HELLO WORLD.", 0
+   .text "HELLO WORLD. SUCCESS??", 0
 
 POS_VERB_TRANSITIVE = 1 ; = verb.trans
 POS_VERB_INTRANSITIVE = 2 ; = verb.intrans
@@ -320,7 +329,6 @@ clear_screen
     sta $0600,x
     sta $0700,x
     inx
-    cpx #0
     bne -
 
     pla  ; restore registers

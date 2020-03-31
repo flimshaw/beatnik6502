@@ -3,4 +3,6 @@ node_modules/
 beatnik.tmp
 src/dict.asm
 *.prg
+*.labels
+*.snap
 log.txt
