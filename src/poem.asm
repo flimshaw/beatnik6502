@@ -14,6 +14,7 @@
 
 SCREEN_LINE_END = $60
 LINE_END = 13
+POEM_LINES = 14
 
 poem_mode
 
@@ -61,8 +62,6 @@ poem_mode
   ; skip a couple lines
   lda #0
 	sta col
-  inc row
-  jsr draw_char
   inc row
   jsr draw_char
   inc row
@@ -159,7 +158,7 @@ poem_loop
 
 	; if we're done, skip all this
 	lda row
-	cmp #16
+	cmp #POEM_LINES
 	beq poem_reset
 
   ; word loop - 3 words per line
@@ -241,9 +240,9 @@ format_poem
   sta row
 
   ; reset the print buffer
-  sta result+1
+  sta print_buffer+1
   lda #$20
-  sta result
+  sta print_buffer
 
   ; zero out the buffer
   lda #$20
@@ -252,7 +251,7 @@ format_poem
   inx
   bne -
 
-  ; setup the loop
+  ; setup the loo
   ldx #0
   ldy #0
 
@@ -268,14 +267,13 @@ format_poem
   sta print_buffer,x
   inx
   bne +
-  inc print_buffer
 + inc col
   jmp -
 z lda #0
   sta col
   inc row
   clc
-  lda #16
+  lda #POEM_LINES
   cmp row
   bne -
   lda #0
@@ -314,7 +312,9 @@ poem_print
   jsr k_print_str0
 
   jsr k_print_newline
-
+  jsr k_print_newline
+  jsr k_print_newline
+  jsr k_print_newline
 
   ; close out the printer connection
   lda #1
