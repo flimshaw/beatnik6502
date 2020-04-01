@@ -12,6 +12,7 @@
 ; POS_OBJECTIVE_PRONOUN = 12 ; = objective pronoun
 ; POS_ARTICLE = 13 ; = article
 
+SCREEN_LINE_END = $60
 LINE_END = 13
 
 poem_mode
@@ -52,7 +53,7 @@ poem_mode
 	jsr draw_word
 
   ; draw an endline character
-  lda #LINE_END
+  lda #SCREEN_LINE_END
 	inc col
 	sta char
 	jsr draw_char
@@ -60,6 +61,8 @@ poem_mode
   ; skip a couple lines
   lda #0
 	sta col
+  inc row
+  jsr draw_char
   inc row
   jsr draw_char
   inc row
@@ -115,8 +118,8 @@ classic_grammar
   ldx poem_cursor
   dex
   lda poem_pos_data,x ; load the previous word's pos
-  asl ; mult by 2
-  tax ; move back to x
+  asl                 ; mult by 2
+  tax                 ; move back to x
 
   ; get the pointer to the pos listing
   lda pos_lookup,x
@@ -173,7 +176,7 @@ poem_loop
 	bne -               ; repeat till words are done
 
   ; draw a carriage return
-  lda #LINE_END
+  lda #SCREEN_LINE_END
 	inc col
 	sta char
 	jsr draw_char
@@ -185,6 +188,7 @@ poem_loop
 	jmp poem_end
 
 poem_reset
+
 	lda #0
   sta poem_cursor
 	sta row
@@ -195,19 +199,102 @@ poem_reset
   ; print the poem out
   jsr poem_print
 
-	clc
-	inc poem_count
-	bne poem_end
-	inc poem_count+1
 	jmp poem_end
 
 col_starts  .word $0400,$0428,$0450,$0478,$04a0,$04c8,$04f0,$0518,$0540,$0568,$0590,$05b8,$05e0,$0608,$0630,$0658,$0680,$06a8,$06d0,$06f8,$0720,$0748,$0770,$0798,$07c0
 lines_per_page  .byte 66
 
+test_print .text "Hello There! This is some test data.",13,"this should have been a CR",0
+
+screen_to_petscii
+  clc
+  cmp #SCREEN_LINE_END
+  beq newline
+  cmp #$20 ; 0-20, add 64
+  bcs +
+  jmp add64
++ cmp #$40 ; 20-40 do nothing
+  bcs +
+  jmp stp_done
++ cmp #$60 ; 40-60
+  bcs +
+  jmp add32
++ jmp stp_done ; default to no change
+newline
+  lda #LINE_END
+  jmp stp_done
+add32
+  clc
+  adc #$20
+  jmp stp_done
+add64
+  clc
+  adc #$40
+  jmp stp_done
+stp_done
+  rts
+
+format_poem
+  ; loop through every line of the screen
+  lda #0
+  sta col
+  sta row
+
+  ; reset the print buffer
+  sta result+1
+  lda #$20
+  sta result
+
+  ; zero out the buffer
+  lda #$20
+  ldx #0
+- sta print_buffer,x
+  inx
+  bne -
+
+  ; setup the loop
+  ldx #0
+  ldy #0
+
+- jsr get_char
+  jsr screen_to_petscii
+  clc
+  cmp #LINE_END
+  bne +
+  sta print_buffer,x
+  inx
+  jmp z
++ clc
+  sta print_buffer,x
+  inx
+  bne +
+  inc print_buffer
++ inc col
+  jmp -
+z lda #0
+  sta col
+  inc row
+  clc
+  lda #16
+  cmp row
+  bne -
+  lda #0
+  inx
+  sta print_buffer,x
+  sta col
+  sta row
+  rts
+
 poem_print
   ; print out the current screen ram
   ; to the printer, one line at a time
   ; until it's all done
+
+  ; kinda lame, but we need to copy the
+  ; poem out into a new area that skips
+  ; the empty spaces i think. that would
+  ; be the easiest anyways
+  jsr format_poem
 
   ; initialize the printer
   lda #1        ; logical file number
@@ -220,24 +307,14 @@ poem_print
   ldx #1
   jsr k_chkout  ; set it as default print output
 
-  ; line print loop
-  ldy #0
-  ldx #0
-- tya
-  asl                ; double the line index for the word offset
-  tax
+  jsr k_print_newline
 
-  lda col_starts,x    ; copy the current column start addr
-  inx
-  ldy col_starts,x
+  lda #<print_buffer
+  ldy #>print_buffer
   jsr k_print_str0
 
   jsr k_print_newline
 
-  clc
-  iny
-  cpy #10
-  beq -
 
   ; close out the printer connection
   lda #1

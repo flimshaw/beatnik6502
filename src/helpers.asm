@@ -203,6 +203,42 @@ dloop ldy #0
     	bne dloop  ; rinse & repeat
       rts
 
+get_char
+
+  txa
+  pha
+
+  ; determine which page
+  lda row
+  sta a  ; put it in num1
+  lda #40
+  sta b
+  clc
+  jsr mult ; multiply y * rows
+
+  ; add x as an additional offset
+  clc
+  lda col
+  adc result
+  bcc +
+  inc result+1
++ sta result
+
+  ; add $04 to the top result to offset it
+  ; for the screen buffer addr
+  clc
+  lda result+1
+  adc #$04
+  sta result+1
+
+  pla ; restore the stack
+  tax
+
+  ldy #0
+  lda (result),y
+
+  rts
+
 ; draws a char at the given location in
 ; the screen buffer
 draw_char
@@ -239,6 +275,8 @@ draw_char
 
   ; finally, write the char to the screen
   lda char
+  ; clc
+  ; adc #$20
   sta (result),y
 
   ; restore registers

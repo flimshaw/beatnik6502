@@ -1,9 +1,6 @@
 
 * = $0801                               ; BASIC start address (#2049)
-.byte $0C,$08,$0A,$00,$9E,$20,$34,$30,$39,$36,$00,$00,$00 ; starts at $1000
-
-*= $1000
-jmp setup
+.byte $0C,$08,$0A,$00,$9E,$20,$34,$39,$31,$35,$32,$00,$00,$00 ; starts at $c000
 
 ; CONSTANTS
 ; a few constants for state machine
@@ -22,6 +19,7 @@ RAND = $D41B
 INTRO_DELAY = 1
 POEM_DELAY = 5
 
+tmp = $f7
 a = $f9
 b = $fb
 result = $fd
@@ -29,15 +27,17 @@ dictCursor = $b6
 dict = $3008
 
 length = $300b
-; w1 = $02
 
 p_dict = $b4
 p_lengths = $a5
 p_indices = $a7
 p_count = $aa
 
+*=$2000
+print_buffer .byte $0 * range(256)
+
 *=$c000
-; jump straight to setup
+jmp setup ; jump straight to setup
 
 ; a bunch of variables
 secs 	.byte 0
@@ -82,14 +82,17 @@ addr .word 0
 ; indices
 poem_pos_data .byte $0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0
 
+ss      := $400 + range(0, 1000, 40)
+scrlo   .byte <ss
+scrhi   .byte >ss
 
 irq
 
 	dec $d019
+
 	pha
 
 	; throw the vblank flag and get out of the interrupt asap
-	clc
 	lda stat
 	ora #VBLANK_FLAG
 	sta stat
@@ -120,7 +123,6 @@ textcolor	; set green on black text
 
 		; setup fonts
 		lda #23
-		ora 53272
 		sta 53272
 
 randseed	; use SID for randomness
