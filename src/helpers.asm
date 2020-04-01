@@ -15,7 +15,7 @@ tick_time
     sta secs
 +   rts
 
-
+; printer specific subroutines
 k_print_str0 = $ab1e
 k_print_newline = $aad7
 
@@ -23,32 +23,6 @@ k_setlfs = $ffba
 k_open = $ffc0
 k_chkout = $ffc9
 k_close = $ffc3
-
-  ; "open" the printer device
-print:
-      lda #1  ; logical file number
-      ldx #4  ; device
-      ldy #7  ; secondary address
-      jsr k_setlfs
-
-      jsr k_open
-
-      ldx #1
-      jsr k_chkout
-
-      lda #<str_hello
-      ldy #>str_hello
-      jsr k_print_str0
-
-      jsr k_print_newline
-
-      lda #1
-      jsr k_close
-
-      rts
-
-str_hello:
-   .text "HELLO WORLD. SUCCESS??", 0
 
 POS_VERB_TRANSITIVE = 1 ; = verb.trans
 POS_VERB_INTRANSITIVE = 2 ; = verb.intrans
@@ -229,7 +203,6 @@ dloop ldy #0
     	bne dloop  ; rinse & repeat
       rts
 
-; x,y,acc = x,y,char
 ; draws a char at the given location in
 ; the screen buffer
 draw_char

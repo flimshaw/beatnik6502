@@ -84,23 +84,11 @@ poem_pos_data .byte $0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,
 
 
 irq
-	; Being all kernal irq handlers switched off we have to do more work by ourselves.
-	; When an interrupt happens the CPU will stop what its doing, store the status and return address
-	; into the stack, and then jump to the interrupt routine. It will not store other registers, and if
-	; we destroy the value of A/X/Y in the interrupt routine, then when returning from the interrupt to
-	; what the CPU was doing will lead to unpredictable results (most probably a crash). So we better
-	; store those registers, and restore their original value before reentering the code the CPU was
-	; interrupted running.
 
-	; If you won't change the value of a register you are safe to not to store / restore its value.
-	; However, it's easy to screw up code like that with later modifying it to use another register too
-	; and forgetting about storing its state.
 	dec $d019
-	; The method shown here to store the registers is the most orthodox and most failsafe.
-
 	pha
-	; throw the vblank flag and get out of the interrupt asap
 
+	; throw the vblank flag and get out of the interrupt asap
 	clc
 	lda stat
 	ora #VBLANK_FLAG
@@ -109,10 +97,6 @@ irq
 	pla
 
 	jmp $ea31
-	; rti        ;Return From Interrupt, this will load into the Program Counter register the address
-						 ;where the CPU was when the interrupt condition arised which will make the CPU continue
-						 ;the code it was interrupted at also restores the status register of the CPU
-
 
 ; setup routine
 setup	; black background

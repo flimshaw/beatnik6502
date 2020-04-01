@@ -12,6 +12,7 @@
 ; POS_OBJECTIVE_PRONOUN = 12 ; = objective pronoun
 ; POS_ARTICLE = 13 ; = article
 
+LINE_END = 13
 
 poem_mode
 
@@ -50,11 +51,21 @@ poem_mode
 	sta length
 	jsr draw_word
 
-	lda #0
-	sta col
+  ; draw an endline character
+  lda #LINE_END
+	inc col
+	sta char
+	jsr draw_char
 
-	lda #3
-	sta row
+  ; skip a couple lines
+  lda #0
+	sta col
+  inc row
+  jsr draw_char
+  inc row
+  jsr draw_char
+  inc row
+  jsr draw_char
 
 	jmp poem_loop
 
@@ -81,7 +92,8 @@ rand_range
   fMod a,rand_max
   rts
 
-
+; completely random word selections
+; all available parts of speech
 random_grammar
   lda RAND
   sta a
@@ -91,8 +103,8 @@ random_grammar
   sta pos
   rts
 
-
-
+; classic Beatnik Box grammar, ported from
+; the original Perl script. WIP
 classic_grammar
 
   ; load the previous word
@@ -147,24 +159,28 @@ poem_loop
 	cmp #16
 	beq poem_reset
 
+  ; word loop - 3 words per line
 	lda #3
 	sta counter
--
-	; pick a random pos
-  jsr random_grammar
-	jsr load_word
-	jsr draw_word
-	lda #$20
+- jsr random_grammar  ; apply grammar
+	jsr load_word       ; load a random word
+	jsr draw_word       ; draw it to the screen
+	lda #$20            ; add a space after it
 	inc col
 	sta char
 	jsr draw_char
 	dec counter
-	bne -
+	bne -               ; repeat till words are done
 
+  ; draw a carriage return
+  lda #LINE_END
+	inc col
+	sta char
+	jsr draw_char
 
 	inc row
-	lda #0
-	sta col
+  lda #0
+	sta col  ; zero out the col
 
 	jmp poem_end
 
@@ -175,11 +191,59 @@ poem_reset
 	lda stat
 	ora #MODEDONE_FLAG
 	sta stat
+
+  ; print the poem out
+  jsr poem_print
+
 	clc
 	inc poem_count
 	bne poem_end
 	inc poem_count+1
 	jmp poem_end
+
+col_starts  .word $0400,$0428,$0450,$0478,$04a0,$04c8,$04f0,$0518,$0540,$0568,$0590,$05b8,$05e0,$0608,$0630,$0658,$0680,$06a8,$06d0,$06f8,$0720,$0748,$0770,$0798,$07c0
+lines_per_page  .byte 66
+
+poem_print
+  ; print out the current screen ram
+  ; to the printer, one line at a time
+  ; until it's all done
+
+  ; initialize the printer
+  lda #1        ; logical file number
+  ldx #4        ; device
+  ldy #7        ; secondary address
+  jsr k_setlfs
+
+  jsr k_open    ; open the file
+
+  ldx #1
+  jsr k_chkout  ; set it as default print output
+
+  ; line print loop
+  ldy #0
+  ldx #0
+- tya
+  asl                ; double the line index for the word offset
+  tax
+
+  lda col_starts,x    ; copy the current column start addr
+  inx
+  ldy col_starts,x
+  jsr k_print_str0
+
+  jsr k_print_newline
+
+  clc
+  iny
+  cpy #10
+  beq -
+
+  ; close out the printer connection
+  lda #1
+  jsr k_close
+
+  rts
 
 poem_end
 	;jsr colorCycling
