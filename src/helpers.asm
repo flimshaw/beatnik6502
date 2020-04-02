@@ -38,7 +38,6 @@ POS_SUBJECTIVE_PRONOUN = 11 ; = subjective pronoun
 POS_OBJECTIVE_PRONOUN = 12 ; = objective pronoun
 POS_ARTICLE = 13 ; = article
 
-PET_OFFSET = $30
 
 ; macro to copy a 16 bit pointer into a
 ; target block for indirect addressing
@@ -196,7 +195,6 @@ dloop ldy #0
     	inc dictCursor
     	bne +	; handle page crossings
     	inc dictCursor+1
-
     	; dec the length remaining
 +    	clc
       dec length

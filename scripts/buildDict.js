@@ -7,6 +7,20 @@ const START_ADDR = 0x4000
 const dict = {}
 let offset = START_ADDR;
 
+const POS_VERB_TRANSITIVE = 1 // verb.trans
+const POS_VERB_INTRANSITIVE = 2 // verb.intrans
+const POS_ADJECTIVE = 3 // adjective
+const POS_ADVERB = 4  // adverb
+const POS_NOUN_THING = 5  // noun.thing
+const POS_NOUN_PERSON = 6 // noun.person
+const POS_NOUN_PLACE = 7  // noun.place
+const POS_PREPOSITION = 8 // preposition
+const POS_CONJUNCTION = 9 // conjunction
+const POS_POSSESSIVE_PRONOUN = 10 // possessive pronoun
+const POS_SUBJECTIVE_PRONOUN = 11 // subjective pronoun
+const POS_OBJECTIVE_PRONOUN = 12  // objective pronoun
+const POS_ARTICLE = 13  // article
+
 fs.readdirSync(folderPath).map(fileName => {
   const f = path.join(folderPath, fileName)
   const readInterface = readline.createInterface({
@@ -45,7 +59,7 @@ function processDict(d) {
     // each dict should be an array of indices
     // and a huge datablock
     return {
-      name: k,
+      name: k.split('+')[1],
       data: dict[k].join(''),
       indices: indices,
       lengths: lengths,
@@ -64,6 +78,7 @@ function formatDatablock(datablocks) {
   let k = datablocks.map(d => {
     return d.indices;
   })
+
   let g = k.map((d,i) => {
     const s = `
 
@@ -106,35 +121,6 @@ function formatDatablock(datablocks) {
   `
   return s
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

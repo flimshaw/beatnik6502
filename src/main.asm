@@ -43,7 +43,7 @@ p_indices = $a7
 p_count = $aa
 
 *=$2000
-print_buffer .byte (0 * range($400))+$20
+print_buffer .byte (0 * range($100))+$20
 
 *=$c000
 jmp setup ; jump straight to setup

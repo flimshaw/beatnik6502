@@ -15,7 +15,7 @@
 SCREEN_LINE_END = $60
 LINE_END = 13
 POEM_LINES = 24
-LINE_WORDS = 4
+LINE_WORDS = 3
 
 poem_mode
 
@@ -73,18 +73,32 @@ poem_mode
 	jmp poem_loop
 
 ; grammar lookup table, based on previous word
-verb_trans_pos      .byte 5, POS_ADVERB, POS_NOUN_THING, POS_NOUN_PERSON, POS_NOUN_PLACE, POS_OBJECTIVE_PRONOUN
-verb_intrans_pos    .byte 3, POS_ADVERB, POS_PREPOSITION, POS_CONJUNCTION
-adjective_pos       .byte 4, POS_NOUN_THING, POS_NOUN_PERSON, POS_NOUN_PLACE, POS_OBJECTIVE_PRONOUN
-adverb_pos          .byte 5, POS_VERB_TRANSITIVE, POS_VERB_INTRANSITIVE, POS_ADJECTIVE, POS_ADVERB, POS_POSSESSIVE_PRONOUN
-noun_pos            .byte 2, POS_CONJUNCTION, POS_ADVERB
-preposition_pos     .byte 5, POS_ADJECTIVE, POS_NOUN_THING, POS_NOUN_PERSON, POS_NOUN_PLACE, POS_POSSESSIVE_PRONOUN
-conjunction_pos     .byte 10, POS_ARTICLE, POS_VERB_TRANSITIVE, POS_VERB_INTRANSITIVE, POS_ADJECTIVE, POS_ADVERB, POS_NOUN_THING, POS_NOUN_PERSON, POS_NOUN_PLACE, POS_PREPOSITION, POS_POSSESSIVE_PRONOUN, POS_SUBJECTIVE_PRONOUN
-pos_pronoun_pos     .byte 3, POS_NOUN_THING, POS_NOUN_PERSON, POS_NOUN_THING
-sub_pronoun_pos     .byte 2, POS_VERB_TRANSITIVE, POS_VERB_INTRANSITIVE
-obj_pronoun_pos     .byte 2, POS_CONJUNCTION, POS_ADVERB
+verb_trans_pos          .byte 5, POS_ADVERB, POS_NOUN_THING, POS_NOUN_PERSON, POS_NOUN_PLACE, POS_OBJECTIVE_PRONOUN
+verb_intrans_pos        .byte 3, POS_ADVERB, POS_PREPOSITION, POS_CONJUNCTION
+adjective_pos           .byte 4, POS_NOUN_THING, POS_NOUN_PERSON, POS_NOUN_PLACE, POS_OBJECTIVE_PRONOUN
+adverb_pos              .byte 5, POS_VERB_TRANSITIVE, POS_VERB_INTRANSITIVE, POS_ADJECTIVE, POS_ADVERB, POS_POSSESSIVE_PRONOUN
+noun_pos                .byte 2, POS_CONJUNCTION, POS_ADVERB
+preposition_pos         .byte 5, POS_ADJECTIVE, POS_NOUN_THING, POS_NOUN_PERSON, POS_NOUN_PLACE, POS_POSSESSIVE_PRONOUN
+conjunction_pos         .byte 10, POS_ARTICLE, POS_VERB_TRANSITIVE, POS_VERB_INTRANSITIVE, POS_ADJECTIVE, POS_ADVERB, POS_NOUN_THING, POS_NOUN_PERSON, POS_NOUN_PLACE, POS_PREPOSITION, POS_POSSESSIVE_PRONOUN, POS_SUBJECTIVE_PRONOUN
+pos_pronoun_pos         .byte 3, POS_NOUN_THING, POS_NOUN_PERSON, POS_NOUN_THING
+sub_pronoun_pos         .byte 2, POS_VERB_TRANSITIVE, POS_VERB_INTRANSITIVE
+obj_pronoun_pos         .byte 2, POS_CONJUNCTION, POS_ADVERB
+article_pos             .byte 5, POS_ADJECTIVE, POS_ADVERB, POS_NOUN_THING, POS_NOUN_PERSON, POS_NOUN_PLACE
 
-pos_lookup          .word 13, verb_trans_pos, verb_intrans_pos, adjective_pos, adverb_pos, noun_pos, noun_pos, noun_pos, preposition_pos, conjunction_pos, pos_pronoun_pos, sub_pronoun_pos, obj_pronoun_pos, pos_pronoun_pos
+verb_trans_pos_end      .byte 3, POS_NOUN_THING, POS_NOUN_PERSON, POS_NOUN_PLACE
+verb_intrans_pos_end    .byte 3, POS_ADVERB
+adjective_pos_end       .byte 4, POS_NOUN_THING, POS_NOUN_PERSON, POS_NOUN_PLACE, POS_OBJECTIVE_PRONOUN
+adverb_pos_end          .byte 1, POS_VERB_TRANSITIVE
+noun_pos_end            .byte 2, POS_CONJUNCTION, POS_ADVERB
+preposition_pos_end     .byte 5, POS_ADJECTIVE, POS_NOUN_THING, POS_NOUN_PERSON, POS_NOUN_PLACE, POS_POSSESSIVE_PRONOUN
+conjunction_pos_end     .byte 10, POS_ARTICLE, POS_VERB_TRANSITIVE, POS_VERB_INTRANSITIVE, POS_ADJECTIVE, POS_ADVERB, POS_NOUN_THING, POS_NOUN_PERSON, POS_NOUN_PLACE, POS_PREPOSITION, POS_POSSESSIVE_PRONOUN, POS_SUBJECTIVE_PRONOUN
+pos_pronoun_pos_end     .byte 3, POS_NOUN_THING, POS_NOUN_PERSON, POS_NOUN_THING
+sub_pronoun_pos_end     .byte 2, POS_VERB_TRANSITIVE, POS_VERB_INTRANSITIVE
+obj_pronoun_pos_end     .byte 2, POS_CONJUNCTION, POS_ADVERB
+article_pos_end         .byte 3, POS_NOUN_THING, POS_NOUN_PERSON, POS_NOUN_PLACE
+
+pos_lookup          .word 13, verb_trans_pos, verb_intrans_pos, adjective_pos, adverb_pos, noun_pos, noun_pos, noun_pos, preposition_pos, conjunction_pos, pos_pronoun_pos, sub_pronoun_pos, obj_pronoun_pos, article_pos
+pos_lookup_end      .word verb_trans_pos_end, verb_intrans_pos_end, adjective_pos_end, adverb_pos_end, noun_pos_end, noun_pos_end, noun_pos_end, preposition_pos_end, conjunction_pos_end, pos_pronoun_pos_end, sub_pronoun_pos_end, obj_pronoun_pos_end, article_pos
 
 ; replace the accumulator with a random
 ; number, max = acc
@@ -204,22 +218,21 @@ poem_reset
 col_starts  .word $0400,$0428,$0450,$0478,$04a0,$04c8,$04f0,$0518,$0540,$0568,$0590,$05b8,$05e0,$0608,$0630,$0658,$0680,$06a8,$06d0,$06f8,$0720,$0748,$0770,$0798,$07c0
 lines_per_page  .byte 66
 
-test_print .text "Hello There! This is some test data.",13,"this should have been a CR",0
-
+; char to be converted is in a
 screen_to_petscii
   clc
-  cmp #SCREEN_LINE_END
+  cmp #SCREEN_LINE_END    ; end conversion on CR
   beq newline
-  cmp #$20 ; 0-20, add 64
+  cmp #$20                ; 0-20 add 64
   bcs +
   jmp add64
-+ cmp #$40 ; 20-40 do nothing
++ cmp #$40                ; 20-40 do nothing
   bcs +
   jmp stp_done
-+ cmp #$60 ; 40-60
++ cmp #$60                ; 40-60 add 32
   bcs +
   jmp add32
-+ jmp stp_done ; default to no change
++ jmp stp_done            ; default to no change
 newline
   lda #LINE_END
   jmp stp_done
