@@ -1,5 +1,13 @@
-
-* = $0801                               ; BASIC start address (#2049)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                                    ;;
+;;  "The shoe-maker on earth that     ;;
+;;	had the soul of a poet in him     ;;
+;;	won't have to make shoes here."   ;;
+;;                                    ;;
+;;                     -Mark Twain    ;;
+;;                                    ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+* = $0801 ; BASIC start address (#2049)
 .byte $0C,$08,$0A,$00,$9E,$20,$34,$39,$31,$35,$32,$00,$00,$00 ; starts at $c000
 
 ; CONSTANTS
@@ -19,6 +27,7 @@ RAND = $D41B
 INTRO_DELAY = 1
 POEM_DELAY = 5
 
+pbuf = $f5
 tmp = $f7
 a = $f9
 b = $fb
@@ -34,7 +43,7 @@ p_indices = $a7
 p_count = $aa
 
 *=$2000
-print_buffer .byte $0 * range(256)
+print_buffer .byte (0 * range($400))+$20
 
 *=$c000
 jmp setup ; jump straight to setup
@@ -162,7 +171,7 @@ setup_vblank
 .enc screen
 .include "dict.asm"
 message
-.text "Beatnik v 1.0 * "
+.text "Beatnik         "
 poem_title
 .text "Poem #"
 poem_number

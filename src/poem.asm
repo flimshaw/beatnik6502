@@ -14,7 +14,8 @@
 
 SCREEN_LINE_END = $60
 LINE_END = 13
-POEM_LINES = 14
+POEM_LINES = 24
+LINE_WORDS = 4
 
 poem_mode
 
@@ -83,7 +84,7 @@ pos_pronoun_pos     .byte 3, POS_NOUN_THING, POS_NOUN_PERSON, POS_NOUN_THING
 sub_pronoun_pos     .byte 2, POS_VERB_TRANSITIVE, POS_VERB_INTRANSITIVE
 obj_pronoun_pos     .byte 2, POS_CONJUNCTION, POS_ADVERB
 
-pos_lookup          .word 0, verb_trans_pos, verb_intrans_pos, adjective_pos, adverb_pos, noun_pos, noun_pos, noun_pos, preposition_pos, conjunction_pos, pos_pronoun_pos, sub_pronoun_pos, obj_pronoun_pos, noun_pos
+pos_lookup          .word 13, verb_trans_pos, verb_intrans_pos, adjective_pos, adverb_pos, noun_pos, noun_pos, noun_pos, preposition_pos, conjunction_pos, pos_pronoun_pos, sub_pronoun_pos, obj_pronoun_pos, pos_pronoun_pos
 
 ; replace the accumulator with a random
 ; number, max = acc
@@ -99,7 +100,7 @@ rand_range
 random_grammar
   lda RAND
   sta a
-  lda #12
+  lda pos_lookup
   sta b
   fMod a,b
   sta pos
@@ -109,7 +110,7 @@ random_grammar
 ; the original Perl script. WIP
 classic_grammar
 
-  ; load the previous word
+  ; load the poem cursor
   lda poem_cursor
   beq classic_random ; if it's the first word, all bets are off
 
@@ -120,14 +121,14 @@ classic_grammar
   asl                 ; mult by 2
   tax                 ; move back to x
 
-  ; get the pointer to the pos listing
+  ; copy the pointer to the given pos matrix
   lda pos_lookup,x
   sta result
   inx
   lda pos_lookup,x
   sta result+1
 
-  ; finally, get a random word
+  ; finally, get a random word part of speech
   ldy #0
   lda (result),y
   jsr rand_range
@@ -161,8 +162,8 @@ poem_loop
 	cmp #POEM_LINES
 	beq poem_reset
 
-  ; word loop - 3 words per line
-	lda #3
+  ; word loop - LINE_WORDS words per line
+	lda #LINE_WORDS
 	sta counter
 - jsr random_grammar  ; apply grammar
 	jsr load_word       ; load a random word
@@ -234,91 +235,136 @@ stp_done
   rts
 
 format_poem
-  ; loop through every line of the screen
-  lda #0
-  sta col
-  sta row
+        ; loop through every line of the screen
+        lda #0
+        sta col
+        sta row
 
-  ; reset the print buffer
-  sta print_buffer+1
-  lda #$20
-  sta print_buffer
+        ; setup the buffer pointer
+        sta pbuf
+        lda #$20
+        sta pbuf+1
 
-  ; zero out the buffer
-  lda #$20
+        ; setup the loop
+        ldx #0
+        ldy #0
+
+  -     jsr get_char
+        jsr screen_to_petscii
+        sta (pbuf),y
+        iny
+        cmp #LINE_END ; if it's a line ending, handle it
+        beq z
+        clc
+        cpy #254      ; if we overflowed, print what we have
+                      ; before continuing...
+        bne +
+        jmp ze
+      + inc col
+        jmp -
+      z lda #0
+        sta col
+        inc row
+        clc
+        lda #POEM_LINES
+        cmp row
+        bne -
+  ze    ; end the poem with a null
+        lda #0
+        iny
+        sta (pbuf),y
+        sta col
+        sta row
+        rts
+
+format_line
+        ; loop through every line of the screen
+        lda #0
+        sta col
+
+        ; setup the loop
+        ldx #0
+        ldy #0
+
+-       jsr get_char
+        jsr screen_to_petscii
+        sta print_buffer,y
+        iny
+        inc col
+        cmp #LINE_END ; if it's a line ending, handle it
+        bne -
+        lda #0
+        sta print_buffer,y
+        sta col
+        rts
+
+stall
   ldx #0
-- sta print_buffer,x
+  ldy #255
+- nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
   inx
   bne -
-
-  ; setup the loo
-  ldx #0
-  ldy #0
-
-- jsr get_char
-  jsr screen_to_petscii
-  clc
-  cmp #LINE_END
-  bne +
-  sta print_buffer,x
-  inx
-  jmp z
-+ clc
-  sta print_buffer,x
-  inx
-  bne +
-+ inc col
-  jmp -
-z lda #0
-  sta col
-  inc row
-  clc
-  lda #POEM_LINES
-  cmp row
+  dey
   bne -
-  lda #0
-  inx
-  sta print_buffer,x
-  sta col
-  sta row
   rts
 
 poem_print
-  ; print out the current screen ram
-  ; to the printer, one line at a time
-  ; until it's all done
+; print out the current screen ram
+; to the printer, one line at a time
+; until it's all done
+; initialize the printer
+lda #1        ; logical file number
+ldx #4        ; device
+ldy #7        ; secondary address
+jsr k_setlfs
 
-  ; kinda lame, but we need to copy the
-  ; poem out into a new area that skips
-  ; the empty spaces i think. that would
-  ; be the easiest anyways
-  jsr format_poem
+jsr k_open    ; open the file
 
-  ; initialize the printer
-  lda #1        ; logical file number
-  ldx #4        ; device
-  ldy #7        ; secondary address
-  jsr k_setlfs
+ldx #1
+jsr k_chkout  ; set it as default print output
 
-  jsr k_open    ; open the file
+jsr k_print_newline
+jsr k_print_newline
+jsr k_print_newline
+jsr k_print_newline
 
-  ldx #1
-  jsr k_chkout  ; set it as default print output
+- jsr format_line
 
-  jsr k_print_newline
 
   lda #<print_buffer
   ldy #>print_buffer
   jsr k_print_str0
 
+
+  ; jsr stall
+
+  inc row
+  lda #POEM_LINES
+  cmp row
+  bne -
+
   jsr k_print_newline
   jsr k_print_newline
   jsr k_print_newline
   jsr k_print_newline
 
+
   ; close out the printer connection
   lda #1
   jsr k_close
+
+  lda #0
+  sta row
+  sta col
 
   rts
 

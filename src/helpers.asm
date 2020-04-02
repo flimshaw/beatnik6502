@@ -207,6 +207,8 @@ get_char
 
   txa
   pha
+  tya
+  pha
 
   ; determine which page
   lda row
@@ -231,11 +233,16 @@ get_char
   adc #$04
   sta result+1
 
-  pla ; restore the stack
-  tax
-
   ldy #0
   lda (result),y
+  sta tmp
+
+  pla
+  tay
+  pla ; restore the stack
+  tax
+  lda tmp
+
 
   rts
 
