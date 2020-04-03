@@ -15,6 +15,30 @@ tick_time
     sta secs
 +   rts
 
+
+stall
+    pha
+    txa
+    pha
+    tya
+    pha
+
+    ldx #0
+    ldy #8
+  - nop
+    inx
+    bne -
+    dey
+    bne -
+
+    pla
+    tay
+    pla
+    tax
+    pla
+
+    rts
+
 ; printer specific subroutines
 k_print_str0 = $ab1e
 k_print_newline = $aad7
@@ -100,6 +124,7 @@ incPoemNumber
 ; queues up a random word from the
 ; currently selected dictionary
 randWord
+
         ; get a random index from this dict
         #fMod $d41b, dict_count
 
@@ -110,8 +135,12 @@ randWord
 
         ; double the index and send it to y
         tya
+        clc
         asl
-        tay
+        bcc +
+        inc p_indices+1
+        ldx #1 ; set a flag to undo this later
++       tay
 
         ; load the target word address
         ; into the dict cursor
@@ -121,6 +150,10 @@ randWord
         lda (p_indices),y
         sta dictCursor+1
 
+        cpx #1
+        bne +
+        dec p_indices+1
++
         rts
 
 load_dict
@@ -128,7 +161,7 @@ load_dict
         ; based on the pos
         lda pos
         asl ; mult by 8 to get the staring index
-        asl
+        asl ; TODO maybe a struct?
         asl
         tax
 
@@ -163,7 +196,7 @@ load_dict
         lda dict_index,x
         sta p_count+1
 
-        ; and copy wordcount asap
+        ; and copy wordcount
         ldy #0
         lda (p_count),y
         sta dict_count
@@ -179,178 +212,181 @@ load_word
         rts
 
 draw_word
-  	   ; load the current char
-dloop ldy #0
-	    lda (dictCursor),y
-    	sta char
+  	  ; load the current char
+dloop   ldy #0
+  	    lda (dictCursor),y
+      	sta char
 
-      ; draw the char to the screen
-    	jsr draw_char
+        ; draw the char to the screen
+      	jsr draw_char
 
-      ; move the cursor right one
-      inc col
+        ; move the cursor right one
+        inc col
 
-    	; move the word cursor right also
-    	clc
-    	inc dictCursor
-    	bne +	; handle page crossings
-    	inc dictCursor+1
-    	; dec the length remaining
-+    	clc
-      dec length
-    	bne dloop  ; rinse & repeat
-      rts
+      	; move the word cursor right also
+      	clc
+      	inc dictCursor
+      	bne +	; handle page crossings
+      	inc dictCursor+1
+      	; dec the length remaining
++       clc
+        dec length
+      	bne dloop  ; rinse & repeat
+        rts
 
 get_char
+        txa
+        pha
+        tya
+        pha
 
-  txa
-  pha
-  tya
-  pha
+        ; determine which page
+        lda row
+        sta a  ; put it in num1
+        lda #40
+        sta b
+        clc
+        jsr mult ; multiply y * rows
 
-  ; determine which page
-  lda row
-  sta a  ; put it in num1
-  lda #40
-  sta b
-  clc
-  jsr mult ; multiply y * rows
+        ; add x as an additional offset
+        clc
+        lda col
+        adc result
+        bcc +
+        inc result+1
+      + sta result
 
-  ; add x as an additional offset
-  clc
-  lda col
-  adc result
-  bcc +
-  inc result+1
-+ sta result
+        ; add $04 to the top result to offset it
+        ; for the screen buffer addr
+        clc
+        lda result+1
+        adc #$04
+        sta result+1
 
-  ; add $04 to the top result to offset it
-  ; for the screen buffer addr
-  clc
-  lda result+1
-  adc #$04
-  sta result+1
+        ldy #0
+        lda (result),y
+        sta tmp
 
-  ldy #0
-  lda (result),y
-  sta tmp
+        pla ; restore the stack
+        tay
+        pla
+        tax
 
-  pla
-  tay
-  pla ; restore the stack
-  tax
-  lda tmp
+        lda tmp
+
+        rts
 
 
-  rts
 
 ; draws a char at the given location in
 ; the screen buffer
 draw_char
+        ; store registers
+        pha
+        tya
+        pha
+        txa
+        pha
 
-  ; store registers
-  pha
-  tya
-  pha
-  txa
-  pha
+        jsr stall
 
-  ; determine which page
-  lda row
-  sta a  ; put it in num1
-  lda #40
-  sta b
-  clc
-  jsr mult ; multiply y * rows
+        ; determine which page
+        lda row
+        sta a  ; put it in num1
+        lda #40
+        sta b
+        clc
+        jsr mult ; multiply y * rows
 
-  ; add x as an additional offset
-  clc
-  lda col
-  adc result
-  bcc +
-  inc result+1
-+ sta result
+        ; add x as an additional offset
+        clc
+        lda col
+        adc result
+        bcc +
+        inc result+1
+      + sta result
 
-  ; add $04 to the top result to offset it
-  ; for the screen buffer addr
-  clc
-  lda result+1
-  adc #$04
-  sta result+1
+        ; add $04 to the top result to offset it
+        ; for the screen buffer addr
+        clc
+        lda result+1
+        adc #$04
+        sta result+1
 
-  ; finally, write the char to the screen
-  lda char
-  ; clc
-  ; adc #$20
-  sta (result),y
+        ; finally, write the char to the screen
+        lda char
+        ; clc
+        ; adc #$20
+        sta (result),y
 
-  ; restore registers
-  pla
-  tax
-  pla
-  tay
-  pla
+        ; restore registers
+        pla
+        tax
+        pla
+        tay
+        pla
 
-  rts
+        rts
 
 ; extremely basic multiplication
 ; by just repeatedly adding
 ; good enough for punk rock
 mult
-  ; zero out the result
-  lda #0
-  sta result
-  sta result+1
+        ; zero out the result
+        lda #0
+        sta result
+        sta result+1
 
 multloop
-  ; if the first number is zero, quit
-  lda a
-  cmp #0
-  beq multend
+        ; if the first number is zero, quit
+        lda a
+        cmp #0
+        beq multend
 
-  dec a         ; dec the first number
-  lda result    ; get the result lsb
-  clc
-  adc b
-  sta result
-  bcc multloop
-  inc result+1  ; if we overflowed, inc
-                ; the msb
-  jmp multloop
+        dec a         ; dec the first number
+        lda result    ; get the result lsb
+        clc
+        adc b
+        sta result
+        bcc multloop
+        inc result+1  ; if we overflowed, inc
+                      ; the msb
+        jmp multloop
 
 multend
-  rts
+        rts
 
 ; mod function
 mod
-      lda ta
-      sec
-modl  sbc tb
-      bcs modl
-      adc tb
-      rts
+        lda ta
+        sec
+modl    sbc tb
+        bcs modl
+        adc tb
+        rts
 
 ; clear the whole screen first
 clear_screen
-    pha  ; save registers
-    tya
-    pha
-    txa
-    pha
+        pha  ; save registers
+        tya
+        pha
+        txa
+        pha
 
-    ldx #$0
-    lda #$20
--   sta $0400,x
-    sta $0500,x
-    sta $0600,x
-    sta $0700,x
-    inx
-    bne -
+        ; fast clear
+        ldx #$0
+        lda #$20
+    -   sta $0400,x
+        sta $0500,x
+        sta $0600,x
+        sta $0700,x
+        inx
+        bne -
 
-    pla  ; restore registers
-    tax
-    pla
-    tay
-    pla
+        pla  ; restore registers
+        tax
+        pla
+        tay
+        pla
 
-    rts
+        rts

@@ -16,6 +16,7 @@ SCREEN_LINE_END = $60
 LINE_END = 13
 POEM_LINES = 24
 LINE_WORDS = 3
+PRINT_MARGIN = 10
 
 poem_mode
 
@@ -103,149 +104,148 @@ pos_lookup_end      .word verb_trans_pos_end, verb_intrans_pos_end, adjective_po
 ; replace the accumulator with a random
 ; number, max = acc
 rand_range
-  sta rand_max
-  lda RAND
-  sta a
-  fMod a,rand_max
-  rts
+        sta rand_max
+        lda RAND
+        sta a
+        fMod a,rand_max
+        rts
 
 ; completely random word selections
 ; all available parts of speech
 random_grammar
-  lda RAND
-  sta a
-  lda pos_lookup
-  sta b
-  fMod a,b
-  sta pos
-  rts
+        lda RAND
+        sta a
+        lda pos_lookup
+        sta b
+        fMod a,b
+        sta pos
+        rts
 
 ; classic Beatnik Box grammar, ported from
 ; the original Perl script. WIP
 classic_grammar
+        ; load the poem cursor
+        lda poem_cursor
+        beq classic_random ; if it's the first word, all bets are off
 
-  ; load the poem cursor
-  lda poem_cursor
-  beq classic_random ; if it's the first word, all bets are off
+        ; otherwise, choose a new pos based on the previous word
+        ldx poem_cursor
+        dex
+        lda poem_pos_data,x ; load the previous word's pos
+        asl                 ; mult by 2
+        tax                 ; move back to x
 
-  ; otherwise, choose a new pos based on the previous word
-  ldx poem_cursor
-  dex
-  lda poem_pos_data,x ; load the previous word's pos
-  asl                 ; mult by 2
-  tax                 ; move back to x
+        ; copy the pointer to the given pos matrix
+        lda pos_lookup,x
+        sta result
+        inx
+        lda pos_lookup,x
+        sta result+1
 
-  ; copy the pointer to the given pos matrix
-  lda pos_lookup,x
-  sta result
-  inx
-  lda pos_lookup,x
-  sta result+1
-
-  ; finally, get a random word part of speech
-  ldy #0
-  lda (result),y
-  jsr rand_range
-  tay
-  lda (result),y
-  sta pos ; and finally, store it in the pos
-  jmp classic_done
+        ; finally, get a random word part of speech
+        ldy #0
+        lda (result),y
+        jsr rand_range
+        tay
+        lda (result),y
+        sta pos ; and finally, store it in the pos
+        jmp classic_done
 
 classic_random
-  lda #5 ; truly random part of speech
-  jsr rand_range
-  adc #3
-  sta pos
+        lda #5 ; truly random part of speech
+        jsr rand_range
+        adc #3
+        sta pos
 classic_done
-  ldx poem_cursor
-  sta poem_pos_data,x
-  inx
-  txa
-  sta poem_cursor
-  rts
+        ldx poem_cursor
+        sta poem_pos_data,x
+        inx
+        txa
+        sta poem_cursor
+        rts
 
 poem_loop
 
-	; check for doneness
-	lda stat
-	and #MODEDONE_FLAG
-	bne poem_end
+      	; check for doneness
+      	lda stat
+      	and #MODEDONE_FLAG
+      	bne poem_end
 
-	; if we're done, skip all this
-	lda row
-	cmp #POEM_LINES
-	beq poem_reset
+      	; if we're done, skip all this
+      	lda row
+      	cmp #POEM_LINES
+      	beq poem_reset
 
-  ; word loop - LINE_WORDS words per line
-	lda #LINE_WORDS
-	sta counter
-- jsr random_grammar  ; apply grammar
-	jsr load_word       ; load a random word
-	jsr draw_word       ; draw it to the screen
-	lda #$20            ; add a space after it
-	inc col
-	sta char
-	jsr draw_char
-	dec counter
-	bne -               ; repeat till words are done
+        ; word loop - LINE_WORDS words per line
+      	lda #LINE_WORDS
+      	sta counter
+      - jsr random_grammar  ; apply grammar
+      	jsr load_word       ; load a random word
+      	jsr draw_word       ; draw it to the screen
+      	lda #$20            ; add a space after it
+      	inc col
+      	sta char
+      	jsr draw_char
+      	dec counter
+      	bne -               ; repeat till words are done
 
-  ; draw a carriage return
-  lda #SCREEN_LINE_END
-	inc col
-	sta char
-	jsr draw_char
+        ; draw a carriage return
+        lda #SCREEN_LINE_END
+      	inc col
+      	sta char
+      	jsr draw_char
 
-	inc row
-  lda #0
-	sta col  ; zero out the col
+      	inc row
+        lda #0
+      	sta col  ; zero out the col
 
-	jmp poem_end
+      	jmp poem_end
 
 poem_reset
 
-	lda #0
-  sta poem_cursor
-	sta row
-	lda stat
-	ora #MODEDONE_FLAG
-	sta stat
+      	lda #0
+        sta poem_cursor
+      	sta row
+      	lda stat
+      	ora #MODEDONE_FLAG
+      	sta stat
 
-  ; print the poem out
-  jsr poem_print
+        ; print the poem out
+        jsr poem_print
 
-	jmp poem_end
+      	jmp poem_end
 
 col_starts  .word $0400,$0428,$0450,$0478,$04a0,$04c8,$04f0,$0518,$0540,$0568,$0590,$05b8,$05e0,$0608,$0630,$0658,$0680,$06a8,$06d0,$06f8,$0720,$0748,$0770,$0798,$07c0
 lines_per_page  .byte 66
 
 ; char to be converted is in a
 screen_to_petscii
-  clc
-  cmp #SCREEN_LINE_END    ; end conversion on CR
-  beq newline
-  cmp #$20                ; 0-20 add 64
-  bcs +
-  jmp add64
-+ cmp #$40                ; 20-40 do nothing
-  bcs +
-  jmp stp_done
-+ cmp #$60                ; 40-60 add 32
-  bcs +
-  jmp add32
-+ jmp stp_done            ; default to no change
-newline
-  lda #LINE_END
-  jmp stp_done
-add32
-  clc
-  adc #$20
-  jmp stp_done
-add64
-  clc
-  adc #$40
-  jmp stp_done
-stp_done
-  rts
+        clc
+        cmp #SCREEN_LINE_END ; end conversion on CR
+        beq newline
+        cmp #$20             ; 0-20 add 64
+        bcs +
+        jmp add64
+      + cmp #$40             ; 20-40 do nothing
+        bcs +
+        jmp stp_done
+      + cmp #$60             ; 40-60 add 32
+        bcs +
+        jmp add32
+      + jmp stp_done         ; default to no change
+      newline
+        lda #LINE_END
+        jmp stp_done
+      add32
+        clc
+        adc #$20
+        jmp stp_done
+      add64
+        clc
+        adc #$40
+        jmp stp_done
+      stp_done
+        rts
 
 format_poem
         ; loop through every line of the screen
@@ -295,9 +295,17 @@ format_line
         lda #0
         sta col
 
+        ; pad each line with #PRINT_MARGIN spaces
+        ldy #0
+        lda #$20
+-       sta print_buffer,y
+        iny
+        cpy #PRINT_MARGIN
+        bne -
+
         ; setup the loop
         ldx #0
-        ldy #0
+        ; ldy #0
 
 -       jsr get_char
         jsr screen_to_petscii
@@ -311,24 +319,6 @@ format_line
         sta col
         rts
 
-stall
-  ldx #0
-  ldy #255
-- nop
-  nop
-  nop
-  nop
-  nop
-  nop
-  nop
-  nop
-  nop
-  nop
-  inx
-  bne -
-  dey
-  bne -
-  rts
 
 poem_print
 ; print out the current screen ram
